@@ -21,12 +21,6 @@ class APIKeyAuth(AuthBase):
     def refresh(self) -> None:
         pass
 
-    def signin(self) -> bool:
-        return True
-
-    def signout(self) -> bool:
-        return True
-
     def get_token(self) -> str:
         return f"{self.key}:{self.secret}"
 
