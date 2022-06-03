@@ -14,6 +14,9 @@ class APIKeyAuth(AuthBase):
 
         if not self.secret:
             raise APIKeyAuthError("API secret is required.")
+        
+        self.secret = self.secret.strip()
+        self.key = self.key.strip()
 
     def requires_refresh(self) -> bool:
         return False
@@ -30,3 +33,6 @@ class APIKeyAuth(AuthBase):
                 "Authorization": f"apiKey {self.get_token()}"
             }
         return self.headers
+    
+    def is_logged_in(self) -> bool:
+        return True

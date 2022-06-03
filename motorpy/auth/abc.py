@@ -7,6 +7,7 @@ While JWT should implment the Base and JWTAuth classes (TBD).
 
 import abc
 
+
 class AuthBase(metaclass=abc.ABCMeta):
     """
     Abstract base class for any authentication method.
@@ -18,17 +19,17 @@ class AuthBase(metaclass=abc.ABCMeta):
     @abc.abstractmethod
     def requires_refresh(self) -> bool:
         """
-        Returns True if the auth method requires a refresh.
+        Returns True if the auth token requires a refresh.
         """
         pass
 
     @abc.abstractmethod
     def refresh(self) -> None:
         """
-        Refreshes the auth method.
+        Refreshes the auth token.
         """
         pass
-    
+
     @abc.abstractmethod
     def get_token(self) -> str:
         """
@@ -43,28 +44,57 @@ class AuthBase(metaclass=abc.ABCMeta):
         """
         pass
 
+    @abc.abstractmethod
+    def is_logged_in(self) -> bool:
+        """
+        Returns True if the auth token is valid. True always for API Key.
+        """
+        pass
+
+
 class JWTAuthBase(AuthBase):
     """
     Abstract base class for any JWT authentication method.
     """
-
     @abc.abstractmethod
-    def login(self, username: str, password: str) -> str:
+    def login(self, email: str, password: str) -> str:
         """
-        Login the user.
+        Login the user/driver.
         """
         pass
 
     @abc.abstractmethod
-    def signout(self) -> bool:
+    def logout(self) -> bool:
         """
-        Signs out the user.
+        Signs out the user/driver.
         """
         pass
-    
+
     @abc.abstractmethod
-    def signout(self) -> bool:
+    def signup(self,
+               email: str,
+               password: str,
+               first_name: str,
+               last_name: str,
+               fields: dict = None,
+               login: bool = True) -> dict:
         """
-        Signs out the user.
+        Signup the user/driver.
+        Returns the user/driver's profile.
         """
         pass
+
+
+class JWTDriverAuthBase(JWTAuthBase):
+    """
+    Abstract base class for any JWT authentication method for drivers.
+    """
+    pass
+
+
+class JWTUserAuthBase(JWTAuthBase):
+    """
+    Abstract base class for any JWT authentication method for users.
+    """
+
+    pass

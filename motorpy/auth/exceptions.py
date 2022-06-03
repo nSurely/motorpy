@@ -10,3 +10,7 @@ class APIKeyAuthError(AuthError):
 class JWTAuthError(AuthError):
     """Exception raised for errors in the JWTAuth class."""
     pass
+
+class DriverCreateError(AuthError):
+    """Exception raised for errors in the DriverAuth class."""
+    pass
