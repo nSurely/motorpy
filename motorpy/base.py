@@ -8,7 +8,6 @@ import drivers
 import vehicles
 from auth import Auth
 
-# example constant variable
 NAME = "motorpy"
 
 

@@ -2,8 +2,6 @@
 from auth import Auth
 from api import APIHandler
 
-from typing import Generator
-
 
 class MotorBase:
 
