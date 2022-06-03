@@ -195,6 +195,16 @@ class Driver(CustomBaseModel):
         """Check that the driver has an ID."""
         if not self.id:
             raise ValueError("Driver id is required")
+    
+    def full_name(self) -> str:
+        """Get the driver's full name.
+
+        Returns:
+            str: full name
+        """
+        if self.middle_name:
+            return f"{self.first_name} {self.middle_name} {self.last_name}"
+        return f"{self.first_name} {self.last_name}"
 
     def list_billing_accounts(self, primary_only: bool = False) -> List[dict]:
         """List billing accounts for this driver.
