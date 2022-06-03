@@ -1,11 +1,11 @@
-"Core Motor Object"
+"Core Motor Base Object - all other objects inherit from this."
 from auth import Auth
 from api import APIHandler
 
 from typing import Generator
 
 
-class Motor:
+class MotorBase:
 
     def __init__(self,
                  org_id: str,
@@ -27,51 +27,3 @@ class Motor:
 
         # all requests are routed through here
         self.api = APIHandler(org_id, auth, region, url)
-
-    def get_driver(self, driver_id: str, **query) -> dict:
-        """Get a driver record.
-
-        Args:
-            driver_id (str): the UUID of the driver.
-
-        Returns:
-            dict: the driver record.
-        """
-        return self.api.request("GET", f"drivers/{driver_id}", params=query)
-
-    def get_vehicle(self, vehicle_id: str, **query) -> dict:
-        """Get a registered vehicle record.
-
-        Args:
-            vehicle_id (str): the UUID of the vehicle.
-
-        Returns:
-            dict: the vehicle record.
-        """
-        return self.api.request("GET", f"registered-vehicles/{vehicle_id}", params=query)
-
-    def search_vehicles(self,
-                        reg_plate: str = None,
-                        vin: str = None,
-                        is_active: bool = None,
-                        is_approved: bool = None,
-                        full_response: bool = True) -> Generator[dict, None, None]:
-        """Search for registered vehicles.
-
-        Returns:
-            dict: the vehicle record.
-        """
-        params = {}
-
-        if reg_plate:
-            params["regPlate"] = reg_plate
-        if vin:
-            params["vin"] = vin
-        if is_active is not None:
-            params["isActive"] = is_active
-        if is_approved is not None:
-            params["isApproved"] = is_approved
-        
-        params['full'] = 't' if full_response else 'f'
-
-        yield from self.api.batch_fetch("registered-vehicles", params=params)
