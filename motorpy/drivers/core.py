@@ -19,7 +19,6 @@ class Drivers(core.MotorBase):
                    files: bool = True,
                    contact: bool = True,
                    occupation: bool = True,
-                   raw_output: bool = False,
                    **query) -> models.Driver:
         """Get a driver record.
 
@@ -34,7 +33,6 @@ class Drivers(core.MotorBase):
             files (bool, optional): whether to include files data. Defaults to True.
             contact (bool, optional): whether to include contact data. Defaults to True.
             occupation (bool, optional): whether to include occupation data. Defaults to True.
-            raw_output (bool, optional): whether to return the raw output (dict) or model. Defaults to False.
             **query (dict): additional query parameters.
 
         Returns:
