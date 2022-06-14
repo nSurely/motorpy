@@ -3,6 +3,8 @@ from pydantic import Field, parse_obj_as
 from datetime import datetime, date
 from typing import Optional, List
 from models.billing import BillingAccount
+from models.fleets import Fleet
+from models.risk import Risk
 
 
 class Driver(models.custom.PrivateAPIHandler):
@@ -148,7 +150,7 @@ class Driver(models.custom.PrivateAPIHandler):
         default=0,
         alias="vehicleCount"
     )
-    risk: Optional[dict] = Field(
+    risk: Optional[Risk] = Field(
         default=None,
         alias="risk"
     )
@@ -167,7 +169,7 @@ class Driver(models.custom.PrivateAPIHandler):
         alias="createdAt"
     )
 
-    fleets: Optional[List[dict]] = Field(
+    fleets: Optional[List[Fleet]] = Field(
         default_factory=list,
         alias="fleets"
     )
