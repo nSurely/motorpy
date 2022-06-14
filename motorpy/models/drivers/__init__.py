@@ -1,27 +1,11 @@
-import api
-from pydantic import BaseModel, Field
+import models
+from pydantic import Field, parse_obj_as
 from datetime import datetime, date
 from typing import Optional, List
+from models.billing import BillingAccount
 
 
-class CustomBaseModel(BaseModel):
-    def dict(self, **kwargs):
-        hidden_fields = set(
-            attribute_name
-            for attribute_name, model_field in self.__fields__.items()
-            if model_field.field_info.extra.get("hidden") is True
-        )
-        kwargs.setdefault("exclude", hidden_fields)
-        return super().dict(**kwargs)
-
-
-class Driver(CustomBaseModel):
-    # private
-    _api: api.APIHandler = Field(
-        default=None,
-        hidden=True
-    )
-
+class Driver(models.custom.PrivateAPIHandler):
     # identifiers
     id: str = Field(
         ...,
@@ -195,7 +179,7 @@ class Driver(CustomBaseModel):
         """Check that the driver has an ID."""
         if not self.id:
             raise ValueError("Driver id is required")
-    
+
     def full_name(self) -> str:
         """Get the driver's full name.
 
@@ -206,47 +190,49 @@ class Driver(CustomBaseModel):
             return f"{self.first_name} {self.middle_name} {self.last_name}"
         return f"{self.first_name} {self.last_name}"
 
-    def list_billing_accounts(self, primary_only: bool = False) -> List[dict]:
+    def list_billing_accounts(self, primary_only: bool = False) -> List[BillingAccount]:
         """List billing accounts for this driver.
 
         Args:
             primary_only (bool, optional): only return the primary account. Defaults to False.
 
         Returns:
-            List[dict]: billing accounts
+            List[BillingAccount]: billing accounts
         """
         self._check_id()
-        return self._api.request(
+        accounts = self._api.request(
             "GET",
             f"/drivers/{self.id}/billing-accounts/",
             params={
                 "primary": primary_only,
             }
         )
+        return parse_obj_as(List[BillingAccount], accounts)
 
-    def get_billing_account(self, id: str) -> dict:
+    def get_billing_account(self, id: str) -> BillingAccount:
         """Get a billing account for this driver.
 
         Args:
             id (str): the id of the billing account
 
         Returns:
-            dict: billing account
+            BillingAccount: billing account
         """
         self._check_id()
         if not id:
             raise ValueError("Billing account id is required")
-        return self._api.request(
+        return parse_obj_as(BillingAccount, self._api.request(
             "GET",
             f"/drivers/{self.id}/billing-accounts/{id}"
-        )
+        ))
 
-    def get_primary_billing_account(self) -> Optional[dict]:
+    def get_primary_billing_account(self) -> Optional[BillingAccount]:
         """Find the primary billing account for this driver.
 
         Returns:
-            Optional[dict]: primary billing account
+            Optional[BillingAccount]: primary billing account
         """
-        res: List[dict] = self.list_billing_accounts(primary_only=True)
+        res: List[BillingAccount] = self.list_billing_accounts(
+            primary_only=True)
         # make another request for the full account details
         return self.get_billing_account(res[0].get('id')) if res else None
