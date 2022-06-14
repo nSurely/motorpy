@@ -3,7 +3,7 @@ import requests
 from auth import Auth
 
 from .exceptions import APIError
-from typing import Generator, List
+from typing import Generator, List, Optional
 
 
 class APIHandlerNoAuth:
@@ -31,6 +31,8 @@ class APIHandlerNoAuth:
                 raise ValueError("Region must be one of: eu-1, us-1, me-1")
             self.url = f"https://{self.region}.nsurely-motor.com/v1/api"
 
+        self.telematics_url = f"https://{self.region}.nsurely-motor.com/v1/telematics"
+
         self.org_url = f"{self.url}/org/{self.org_id}"
 
     def _make_request(self, method: str, url: str, **kwargs) -> requests.Response:
@@ -41,7 +43,7 @@ class APIHandlerNoAuth:
                 endpoint: str,
                 params: dict = None,
                 data: dict = None,
-                headers: dict = None) -> dict:
+                headers: dict = None) -> Optional[dict]:
         """Make a request to the API.
 
         Args:
@@ -59,6 +61,35 @@ class APIHandlerNoAuth:
         """
         res = self._make_request(
             method, f"{self.org_url}/{endpoint}", params=params, data=data, headers=headers)
+
+        if res.status_code < 300:
+            return res.json() if res.json() else None
+        else:
+            raise APIError(f"{res.status_code} - {res.text}")
+
+    def telematics_request(self,
+                           method: str,
+                           endpoint: str,
+                           params: dict = None,
+                           data: dict = None,
+                           headers: dict = None) -> Optional[dict]:
+        """Make a request to the API.
+
+        Args:
+            method (str): the HTTP method.
+            endpoint (str): URL path to the API endpoint.
+            params (dict, optional): query params. Defaults to None.
+            data (dict, optional): body. Defaults to None.
+            headers (dict, optional): headers. Defaults to None.
+
+        Raises:
+            APIError: an API error occurred.
+
+        Returns:
+            Optional[dict]: response body if supplied.
+        """
+        res = self._make_request(
+            method, f"{self.telematics_url}/{endpoint}", params=params, data=data, headers=headers)
 
         if res.status_code < 300:
             return res.json() if res.json() else None
