@@ -1,8 +1,9 @@
-import motorpy.api as api
 from pydantic import BaseModel, Field
+from typing import Any
 
 
 class CustomBaseModel(BaseModel):
+    # pass
     def dict(self, **kwargs):
         hidden_fields = set(
             attribute_name
@@ -14,8 +15,14 @@ class CustomBaseModel(BaseModel):
 
 
 class PrivateAPIHandler(CustomBaseModel):
+    """
+    This api handler is for private use only.
+    It allows multiple models to reference the same API with the same credentials.
+    """
     # private
-    _api: api.APIHandler = Field(
+    # ! workaround: this is Any type because pydantic Field doesn't support assignment in other models
+    # this will always be None or api.APIHandler
+    api: Any = Field(
         default=None,
         include=False,
         hidden=True
@@ -23,3 +30,7 @@ class PrivateAPIHandler(CustomBaseModel):
 
     class Config:
         allow_populatiion_by_field_name = True
+
+    # def connect_api(self, api: api.APIHandler):
+    #     "Reset the API connection."
+    #     self.api = api

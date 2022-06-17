@@ -55,8 +55,8 @@ class Drivers(core.MotorBase):
             "GET", f"drivers/{driver_id}", params=params
         )
         
-        model: models.Driver = models.Driver.from_dict(driver_raw)
+        model: models.Driver = models.Driver(**driver_raw)
 
-        model._api = self.api
+        model.api = self.api
 
         return model

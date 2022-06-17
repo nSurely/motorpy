@@ -6,7 +6,6 @@ from motorpy.models.billing import BillingAccount
 from motorpy.models.fleets import Fleet
 from motorpy.models.risk import Risk
 
-
 class Driver(models.custom.PrivateAPIHandler):
     # identifiers
     id: str = Field(
@@ -202,7 +201,7 @@ class Driver(models.custom.PrivateAPIHandler):
             List[BillingAccount]: billing accounts
         """
         self._check_id()
-        accounts = self._api.request(
+        accounts = self.api.request(
             "GET",
             f"/drivers/{self.id}/billing-accounts/",
             params={
@@ -223,7 +222,7 @@ class Driver(models.custom.PrivateAPIHandler):
         self._check_id()
         if not id:
             raise ValueError("Billing account id is required")
-        return parse_obj_as(BillingAccount, self._api.request(
+        return parse_obj_as(BillingAccount, self.api.request(
             "GET",
             f"/drivers/{self.id}/billing-accounts/{id}"
         ))
@@ -237,4 +236,4 @@ class Driver(models.custom.PrivateAPIHandler):
         res: List[BillingAccount] = self.list_billing_accounts(
             primary_only=True)
         # make another request for the full account details
-        return self.get_billing_account(res[0].get('id')) if res else None
+        return self.get_billing_account(res[0].id) if res else None
