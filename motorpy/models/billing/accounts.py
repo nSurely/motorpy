@@ -31,6 +31,7 @@ class BillingAccount(models.PrivateAPIHandler):
         alias="isPrimary",
     )
     created_at: datetime = Field(
+        default=None,
         alias="createdAt",
     )
     currency_iso_code: Optional[str] = Field(
