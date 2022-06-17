@@ -275,7 +275,7 @@ class APIHandler(APIHandlerNoAuth):
         params['offset'] = offset
 
         while True:
-            body, status = self.request(
+            body = self.request(
                 "GET",
                 endpoint,
                 params=params,
