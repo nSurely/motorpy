@@ -128,6 +128,12 @@ class APIHandlerNoAuth:
         """Close the asynchronous session."""
         if self.async_requests:
             self.session.close()
+    
+    def __del__(self) -> None:
+        # ! this is only called when ref count is 0
+        # so in practice this wont be called but just in case
+        # better to use context manager!
+        self.close_session()
 
 
 class APIHandler(APIHandlerNoAuth):
