@@ -237,3 +237,11 @@ class Driver(models.custom.PrivateAPIHandler):
             primary_only=True)
         # make another request for the full account details
         return self.get_billing_account(res[0].id) if res else None
+    
+    def list_fleets(self, full=True) -> List[Fleet]:
+        """List fleets for this driver. This will call the API foreach fleet to get all fields unless specified otherwise."""
+        if not self.fleets:
+            return []
+        if not full:
+            return self.fleets or []
+        return [f.refresh() for f in self.fleets]
