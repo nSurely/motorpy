@@ -1,7 +1,10 @@
 import motorpy.core as core
 import motorpy.models as models
 from motorpy.auth import Auth
-from typing import Union
+from datetime import date
+from typing import Union, Generator
+import motorpy.search as search
+
 
 class Drivers(core.MotorBase):
 
@@ -54,9 +57,43 @@ class Drivers(core.MotorBase):
         driver_raw = self.api.request(
             "GET", f"drivers/{driver_id}", params=params
         )
-        
+
         model: models.Driver = models.Driver(**driver_raw)
 
         model.api = self.api
 
         return model
+
+    def list_drivers(self,
+                     dob: Union[date, search.Search] = None,
+                     email: Union[str, search.Search] = None,
+                     first_name: Union[str, search.Search] = None,
+                     last_name: Union[str, search.Search] = None,
+                     external_id: Union[str, search.Search] = None,
+                     is_active: bool = None,
+                     max_records: int = None) -> Generator[models.Driver, None, None]:
+        params = {}
+
+        if dob is not None:
+            params['dob'] = dob
+        if email is not None:
+            params['email'] = email
+        if first_name is not None:
+            params['firstName'] = first_name
+        if last_name is not None:
+            params['lastName'] = last_name
+        if external_id is not None:
+            params['externalId'] = external_id
+        if is_active is not None:
+            params['isActive'] = is_active
+
+        count = 0
+        for driver in self.api.batch_fetch("drivers",
+                                            params=params):
+            if max_records is not None:
+                if count >= max_records:
+                    break
+            model: models.Driver = models.Driver(**driver)
+            model.api = self.api
+            yield model
+            count += 1
