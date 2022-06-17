@@ -2,8 +2,6 @@
 This test covers the API handler class as it is inherited by many models.
 """
 from ..accounts import BillingAccount
-import api
-import auth
 
 
 class TestApiHandler:
