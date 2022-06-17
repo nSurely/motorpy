@@ -1,6 +1,6 @@
-import core
-import models
-from auth import Auth
+import motorpy.core as core
+import motorpy.models as models
+from motorpy.auth import Auth
 from typing import Union
 
 class Drivers(core.MotorBase):

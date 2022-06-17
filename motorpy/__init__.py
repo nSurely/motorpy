@@ -1,1 +1,1 @@
-from .base import Motor
+from motorpy.base import Motor

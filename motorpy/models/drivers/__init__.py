@@ -1,10 +1,10 @@
-import models
+import motorpy.models as models
 from pydantic import Field, parse_obj_as
 from datetime import datetime, date
 from typing import Optional, List
-from models.billing import BillingAccount
-from models.fleets import Fleet
-from models.risk import Risk
+from motorpy.models.billing import BillingAccount
+from motorpy.models.fleets import Fleet
+from motorpy.models.risk import Risk
 
 
 class Driver(models.custom.PrivateAPIHandler):

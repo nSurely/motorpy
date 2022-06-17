@@ -1,4 +1,4 @@
-import models
+import motorpy.models as models
 from pydantic import Field
 from typing import Optional
 from datetime import date, datetime

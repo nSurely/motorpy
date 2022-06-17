@@ -1,5 +1,5 @@
-import core
-from auth import Auth
+import motorpy.core as core
+from motorpy.auth import Auth
 from typing import Generator
 
 

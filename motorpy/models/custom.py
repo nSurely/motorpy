@@ -1,4 +1,4 @@
-import api
+import motorpy.api as api
 from pydantic import BaseModel, Field
 
 

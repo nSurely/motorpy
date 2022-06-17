@@ -1,9 +1,9 @@
 from pydantic import Field
 from typing import Optional, List, Any
-from models import PrivateAPIHandler
-from models.risk import Risk
+from motorpy.models import PrivateAPIHandler
+from motorpy.models.risk import Risk
 from datetime import datetime
-from models.constants import LANG
+from motorpy.models.constants import LANG
 
 
 class Fleet(PrivateAPIHandler):

@@ -1,5 +1,5 @@
-from models import PrivateAPIHandler
-from models.billing.accounts import BillingAccount
+from motorpy.models import PrivateAPIHandler
+from motorpy.models.billing.accounts import BillingAccount
 from pydantic import Field
 from typing import Optional
 from datetime import datetime

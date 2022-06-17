@@ -1,7 +1,7 @@
 import aiohttp
 import requests
 import asyncio
-from auth import Auth
+from motorpy.auth import Auth
 
 from .exceptions import APIError
 from typing import Generator, List, Optional, Coroutine, Tuple

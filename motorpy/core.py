@@ -1,6 +1,6 @@
 "Core Motor Base Object - all other objects inherit from this."
-from auth import Auth
-from api import APIHandler
+from motorpy.auth import Auth
+from motorpy.api import APIHandler
 
 
 class MotorBase:

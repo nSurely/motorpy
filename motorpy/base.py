@@ -4,9 +4,9 @@ motorpy base module.
 This is the principal module of the motorpy project.
 here you put your main classes and objects.
 """
-import drivers
-import vehicles
-from auth import Auth
+import motorpy.drivers as drivers
+import motorpy.vehicles as vehicles
+from motorpy.auth import Auth
 
 NAME = "motorpy"
 
