@@ -25,3 +25,6 @@ class MotorBase:
 
         # all requests are routed through here
         self.api = APIHandler(org_id, auth, region, url)
+    
+    def close_session(self):
+        self.api.close_session()

@@ -29,3 +29,9 @@ class Motor(drivers.Drivers,
         """
         drivers.Drivers.__init__(self, org_id, auth, region, url)
         vehicles.Vehicles.__init__(self, org_id, auth, region, url)
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        self.close_session()

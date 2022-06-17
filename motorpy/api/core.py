@@ -41,7 +41,7 @@ class APIHandlerNoAuth:
                  region: str = None,
                  url: str = None,
                  timeout: float = 10.0,
-                 async_requests: bool = True) -> None:
+                 async_requests: bool = False) -> None:
         self.org_id = org_id
         self.region = region
         self.url = url
@@ -117,13 +117,17 @@ class APIHandlerNoAuth:
             method, f"{self.org_url}/{endpoint}",
             params=params,
             data=data,
-            headers=headers,
-            timeout=self.timeout)
+            headers=headers)
 
         if status < 300:
             return body
         else:
             raise APIError(f"API responded with {status}")
+
+    def close_session(self) -> None:
+        """Close the asynchronous session."""
+        if self.async_requests:
+            self.session.close()
 
 
 class APIHandler(APIHandlerNoAuth):
@@ -162,10 +166,15 @@ class APIHandler(APIHandlerNoAuth):
         if 'headers' not in kwargs:
             kwargs['headers'] = {}
 
-        kwargs['headers'] = self.auth.get_headers()
-        kwargs['headers'].update(kwargs.pop("headers", {}))
+        kwargs['headers'] = {
+            **kwargs['headers'],
+            **self.auth.get_headers()
+        }
 
-        return self._loop_request(method, url, **kwargs, headers=kwargs['headers'], timeout=self.timeout)
+        return self._loop_request(method,
+                                  url,
+                                  headers=kwargs['headers'],
+                                  params=kwargs.get('params', {}))
 
     def auth_ok(self) -> bool:
         """Check if the auth token is still valid."""
