@@ -1,5 +1,6 @@
 from pydantic import Field
 from typing import Optional, List, Any
+from motorpy import api
 from motorpy.models import PrivateAPIHandler
 from motorpy.models.risk import Risk
 from datetime import datetime
@@ -121,56 +122,64 @@ class Fleet(PrivateAPIHandler):
         """Check if the fleet has a parent fleet."""
         return self.parent_id is not None
 
-    def get_tags(self) -> Optional[List[str]]:
+    def get_tags(self) -> List[str]:
         """Get the tags for the fleet."""
-        return self.tags.split(",") if self.tags else None
+        return self.tags.split(",") if self.tags else []
 
-    def update_field(self, field: str, value: Any, persist: bool = False) -> None:
+    def update(self, persist: bool = False, **kwargs) -> None:
         """
         Update a field on the fleet model, call update to persist changes in the API.
-        
+
         Args:
             field (str): the field to update
             value (Any): the value to set the field to
             persist (bool): whether to persist the changes to the API. Defaults to False.
-        
+
         Note: when doing multiple updates, it is recommended to call update() after all updates are made.
         """
-        self.__setattr__(field, value)
-        self.__fields_set__.add(field)
+        if not kwargs:
+            return
+        for key, value in kwargs.items():
+            object.__setattr__(self, key, value)
+            self.__fields_set__.add(key)
         if persist:
-            self.update()
+            self.save()
 
-    def update(self, fields: dict = None) -> Optional[dict]:
+    def save(self, fields: dict = None) -> Optional[dict]:
         """
         Update the fleet via the API.
 
         Args:
             fields (dict, optional): the API formatted fields to update. If not supplied, any set fields in the model will be updated in the API. Defaults to None.
         """
+        data = self.dict(
+            by_alias=True,
+            exclude={'api', 'id'},
+            skip_defaults=True,
+            exclude_unset=True
+        ) if not fields else fields
+        print(data)
+        if not data:
+            return
         return self.api.request(
             "PATCH",
             f"/fleets/{self.id}",
-            json=self.dict(
-                by_alias=True,
-                exclude={'_api', 'id'},
-                skip_defaults=True,
-                exclude_unset=True
-            ) if not fields else fields
+            data=data
         )
-    
+
     def refresh(self) -> None:
         """
         Refresh the fleet model from the API.
         """
-        self.__init__(self.api.request("GET", f"/fleets/{self.id}"))
-    
+        api = self.api
+        self.__init__(**self.api.request("GET", f"/fleets/{self.id}"), api=api)
+
     def delete(self) -> None:
         """
         Delete the fleet via the API.
         """
         self.api.request("DELETE", f"/fleets/{self.id}")
-    
+
     def get_parent(self) -> Optional['Fleet']:
         """
         Get the parent fleet of the current fleet.
@@ -178,4 +187,3 @@ class Fleet(PrivateAPIHandler):
         if not self.has_parent():
             return None
         return Fleet(**self.api.request("GET", f"/fleets/{self.parent_id}"))
-    

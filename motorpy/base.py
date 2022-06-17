@@ -6,13 +6,15 @@ here you put your main classes and objects.
 """
 import motorpy.drivers as drivers
 import motorpy.vehicles as vehicles
+import motorpy.fleets as fleets
 from motorpy.auth import Auth
 
 NAME = "motorpy"
 
 
 class Motor(drivers.Drivers,
-            vehicles.Vehicles):
+            vehicles.Vehicles,
+            fleets.Fleets):
 
     def __init__(self,
                  org_id: str,
@@ -29,6 +31,7 @@ class Motor(drivers.Drivers,
         """
         drivers.Drivers.__init__(self, org_id, auth, region, url)
         vehicles.Vehicles.__init__(self, org_id, auth, region, url)
+        fleets.Fleets.__init__(self, org_id, auth, region, url)
 
     def close(self):
         self.close_session()

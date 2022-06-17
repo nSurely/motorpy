@@ -226,7 +226,7 @@ class APIHandler(APIHandlerNoAuth):
 
         body, status = self._make_request(
             method, f"{self.org_url}/{endpoint}", params=params, data=data, headers=headers)
-
+        
         if status == 401:
             self.check_auth()
             headers.update(self.auth.get_headers())
@@ -236,7 +236,7 @@ class APIHandler(APIHandlerNoAuth):
         if status < 300:
             return body
         else:
-            raise APIError(f"API responded with {status}")
+            raise APIError(f"API responded with {status} - {body}")
 
     def telematics_request(self,
                            method: str,
