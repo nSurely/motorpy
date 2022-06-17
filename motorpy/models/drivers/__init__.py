@@ -208,7 +208,7 @@ class Driver(models.custom.PrivateAPIHandler):
                 "primary": primary_only,
             }
         )
-        return parse_obj_as(List[BillingAccount], accounts)
+        return parse_obj_as(Optional[List[BillingAccount]], accounts)
 
     def get_billing_account(self, id: str) -> BillingAccount:
         """Get a billing account for this driver.
