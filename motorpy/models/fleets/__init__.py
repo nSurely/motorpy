@@ -164,3 +164,18 @@ class Fleet(PrivateAPIHandler):
         Refresh the fleet model from the API.
         """
         self.__init__(self.api.request("GET", f"/fleets/{self.id}"))
+    
+    def delete(self) -> None:
+        """
+        Delete the fleet via the API.
+        """
+        self.api.request("DELETE", f"/fleets/{self.id}")
+    
+    def get_parent(self) -> Optional['Fleet']:
+        """
+        Get the parent fleet of the current fleet.
+        """
+        if not self.has_parent():
+            return None
+        return Fleet(**self.api.request("GET", f"/fleets/{self.parent_id}"))
+    
