@@ -7,7 +7,7 @@ from typing import Optional, List
 # from motorpy.models.risk import Risk
 
 
-class Driver(models.custom.PrivateAPIHandler):
+class Driver(models.custom.PrivateAPIHandler, models.risk.CommonRisk):
     # identifiers
     id: str = Field(
         ...,
@@ -150,10 +150,6 @@ class Driver(models.custom.PrivateAPIHandler):
         default=0,
         alias="vehicleCount"
     )
-    risk: Optional[models.risk.Risk] = Field(
-        default=None,
-        alias="risk"
-    )
 
     # meta
     total_points: Optional[int] = Field(
@@ -175,21 +171,22 @@ class Driver(models.custom.PrivateAPIHandler):
         alias="fleets"
     )
 
+    vehicles_raw: List[dict] = Field(
+        default=[],
+        alias="fleets"
+    )
+
     @property
-    def fleets(self) -> List['models.fleets.Fleet']:
-        """List fleets for this driver.
+    def vehicles(self) -> List['models.vehicles.DriverVehicle']:
+        """List vehicles for this driver.
 
         Returns:
-            List[Fleet]: fleets
+            List[DriverVehicle]: vehicles
         """
-        if not self.fleet_raw:
-            return []
-        return parse_obj_as(Optional[List[models.fleets.Fleet]], self.fleet_raw or [])
-
-    @fleets.setter
-    def fleets(self, fleets: List['models.fleets.Fleet']) -> None:
-        """Set the fleets for this driver. This will call the API foreach fleet to get all fields unless specified otherwise."""
-        self.fleet_raw = [f.to_dict(by_alias=True) for f in fleets]
+        if not self.vehicles_raw:
+            self.vehicles_raw = self.api.request(
+                "GET", f"drivers/{self.id}/vehicles")
+        return parse_obj_as(List[models.vehicles.DriverVehicle], self.vehicles_raw or [])
 
     def to_dict(self, api_format: bool = False, **kwargs):
         return self.dict(exclude={"_api"}, by_alias=api_format)
@@ -229,6 +226,15 @@ class Driver(models.custom.PrivateAPIHandler):
         )
         return parse_obj_as(Optional[List[models.billing.BillingAccount]], accounts)
 
+    @property
+    def billing_accounts(self) -> List[models.billing.BillingAccount]:
+        """List billing accounts for this driver.
+
+        Returns:
+            List[BillingAccount]: billing accounts
+        """
+        return self.list_billing_accounts()
+
     def get_billing_account(self, id: str) -> models.billing.BillingAccount:
         """Get a billing account for this driver.
 
@@ -257,13 +263,30 @@ class Driver(models.custom.PrivateAPIHandler):
         # make another request for the full account details
         return self.get_billing_account(res[0].id) if res else None
 
-    def list_fleets(self, full=True) -> List['models.fleets.Fleet']:
-        """List fleets for this driver. This will call the API foreach fleet to get all fields unless specified otherwise."""
-        if not self.fleets:
+    @property
+    def primary_billing_account(self) -> Optional[models.billing.BillingAccount]:
+        """Find the primary billing account for this driver.
+
+        Returns:
+            Optional[BillingAccount]: primary billing account
+        """
+        return self.get_primary_billing_account()
+
+    @property
+    def fleets(self) -> List['models.fleets.Fleet']:
+        """List fleets for this driver.
+
+        Returns:
+            List[Fleet]: fleets
+        """
+        if not self.fleet_raw:
             return []
-        if not full:
-            return self.fleets or []
-        return [f.refresh() for f in self.fleets]
+        return parse_obj_as(Optional[List[models.fleets.Fleet]], self.fleet_raw or [])
+
+    @fleets.setter
+    def fleets(self, fleets: List['models.fleets.Fleet']) -> None:
+        """Set the fleets for this driver. This will call the API foreach fleet to get all fields unless specified otherwise."""
+        self.fleet_raw = [f.to_dict(by_alias=True) for f in fleets]
 
 
 Driver.update_forward_refs()

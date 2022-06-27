@@ -1,7 +1,7 @@
 from pydantic import Field
 from typing import Optional
 from motorpy.models import PrivateAPIHandler
-from datetime import datetime
+from datetime import date
 from enum import Enum
 
 
@@ -170,43 +170,43 @@ class VehicleType(PrivateAPIHandler):
     warranty_basic_years: Optional[int] = Field(
         None, alias="warrantyBasicYears")
     warranty_basic_km: Optional[int] = Field(None, alias="warrantyBasicKM")
-    warranty_basic_expiry: Optional[datetime.date] = Field(
+    warranty_basic_expiry: Optional[date] = Field(
         None, alias="warrantyBasicExpiry")
     warranty_drivetrain_years: Optional[int] = Field(
         None, alias="warrantyDrivetrainYears")
     warranty_drivetrain_km: Optional[int] = Field(
         None, alias="warrantyDrivetrainKM")
-    warranty_drivetrain_expiry: Optional[datetime.date] = Field(
+    warranty_drivetrain_expiry: Optional[date] = Field(
         None, alias="warrantyDrivetrainExpiry")
     warranty_roadside_years: Optional[int] = Field(
         None, alias="warrantyRoadsideYears")
     warranty_roadside_km: Optional[int] = Field(
         None, alias="warrantyRoadsideKM")
-    warranty_roadside_expiry: Optional[datetime.date] = Field(
+    warranty_roadside_expiry: Optional[date] = Field(
         None, alias="warrantyRoadsideExpiry")
     warranty_rust_years: Optional[int] = Field(
         None, alias="warrantyRustYears")
     warranty_rust_km: Optional[int] = Field(
         None, alias="warrantyRustKM")
-    warranty_rust_expiry: Optional[datetime.date] = Field(
+    warranty_rust_expiry: Optional[date] = Field(
         None, alias="warrantyRustExpiry")
     warranty_free_maintenance_years: Optional[int] = Field(
         None, alias="warrantyFreeMaintenanceYears")
     warranty_free_maintenance_km: Optional[int] = Field(
         None, alias="warrantyFreeMaintenanceKM")
-    warranty_free_maintenance_expiry: Optional[datetime.date] = Field(
+    warranty_free_maintenance_expiry: Optional[date] = Field(
         None, alias="warrantyFreeMaintenanceExpiry")
     warranty_hybrid_component_years: Optional[int] = Field(
         None, alias="warrantyHybridComponentYears")
     warranty_hybrid_component_km: Optional[int] = Field(
         None, alias="warrantyHybridComponentKM")
-    warranty_hybrid_component_expiry: Optional[datetime.date] = Field(
+    warranty_hybrid_component_expiry: Optional[date] = Field(
         None, alias="warrantyHybridComponentExpiry")
     warranty_ev_battery_years: Optional[int] = Field(
         None, alias="warrantyEVBatteryYears")
     warranty_ev_battery_km: Optional[int] = Field(
         None, alias="warrantyEVBatteryKM")
-    warranty_ev_battery_expiry: Optional[datetime.date] = Field(
+    warranty_ev_battery_expiry: Optional[date] = Field(
         None, alias="warrantyEVBatteryExpiry")
     length_mm: Optional[int] = Field(None, alias="lengthMM")
     width_mm: Optional[int] = Field(None, alias="widthMM")

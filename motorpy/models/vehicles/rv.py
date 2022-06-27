@@ -2,11 +2,11 @@ from pydantic import Field
 from typing import Optional
 from motorpy.models import PrivateAPIHandler
 from datetime import datetime
-from models.risk import Risk
+from motorpy.models.risk import CommonRisk
 from .v import VehicleType
 
 
-class Vehicle(PrivateAPIHandler):
+class Vehicle(PrivateAPIHandler, CommonRisk):
     id: str = Field(
         default=...,
         alias="id",
@@ -170,13 +170,6 @@ class Vehicle(PrivateAPIHandler):
         alias="isActive",
         title="Is Active",
         description="If this vehicle is active. If false, this vehicle will not be returned to the end user."
-    )
-
-    risk: Risk = Field(
-        default=None,
-        alias="risk",
-        title="Risk",
-        description="The risk profile of the registered vehicle."
     )
 
     vehicle_type: Optional[VehicleType] = Field(

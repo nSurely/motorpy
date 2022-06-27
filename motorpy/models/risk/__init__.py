@@ -35,3 +35,7 @@ class Risk(BaseModel):
     lookback: RiskRetro = Field(default=RiskRetro())
     dynamic: DynamicRisk = Field(default=DynamicRisk())
     ihr: RiskRetro = Field(default=RiskRetro())
+
+
+class CommonRisk(BaseModel):
+    risk: Risk = Field(default=None, alias="risk")

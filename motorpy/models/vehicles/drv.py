@@ -2,11 +2,11 @@ from pydantic import Field
 from typing import Optional
 from motorpy.models import PrivateAPIHandler
 from datetime import datetime
-from models.risk import Risk
+from motorpy.models.risk import CommonRisk
 from .rv import Vehicle
 
 
-class DriverVehicle(PrivateAPIHandler):
+class DriverVehicle(PrivateAPIHandler, CommonRisk):
     id: str = Field(
         default=...,
         alias="id",
@@ -84,13 +84,6 @@ class DriverVehicle(PrivateAPIHandler):
         """
     )
 
-    risk: Risk = Field(
-        default=None,
-        alias="risk",
-        title="Risk",
-        description="The risk profile of the driver."
-    )
-
     vehicle: Vehicle = Field(
         default=None,
         alias="registeredVehicle",
@@ -100,3 +93,5 @@ class DriverVehicle(PrivateAPIHandler):
 
     class Config:
         anystr_strip_whitespace = True
+
+DriverVehicle.update_forward_refs()
