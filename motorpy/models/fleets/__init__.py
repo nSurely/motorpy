@@ -196,7 +196,7 @@ class Fleet(PrivateAPIHandler):
                       expires_at: datetime = None,
                       is_active: bool = True,
                       vehicle_ids: List[str] = None,
-                      vehicle_expires_at: Union[List[datetime], datetime] = None) -> dict:
+                      vehicle_expires_at: Union[List[datetime], datetime] = None) -> FleetDriver:
         """Assign a driver to the fleet
 
         Args:
@@ -211,7 +211,7 @@ class Fleet(PrivateAPIHandler):
                 Note: Supply a single datetime for all vehicles, or a list of datetimes for each vehicle.
 
         Returns:
-            dict: the API response
+            FleetDriver: the API response
         """
         if vehicle_ids is None:
             vehicle_ids = []
@@ -228,8 +228,12 @@ class Fleet(PrivateAPIHandler):
             f"/fleets/{self.id}/drivers",
             data=data
         )
+        driver = FleetDriver(**driver_res)
+        driver.api = self.api
+
         if not vehicle_ids:
-            return driver_res
+            return driver
+        
         try:
             if isinstance(vehicle_expires_at, datetime) or vehicle_expires_at is None:
                 for vehicle_id in vehicle_ids:
@@ -240,7 +244,7 @@ class Fleet(PrivateAPIHandler):
                             "expiresAt": vehicle_expires_at.isoformat() if vehicle_expires_at else None
                         }
                     )
-                return driver_res
+                return driver
 
             # each vehicle has a different expiration date
             for vehicle_id, expires_at in zip(vehicle_ids, vehicle_expires_at):
@@ -256,7 +260,7 @@ class Fleet(PrivateAPIHandler):
             self.api.request(
                 "DELETE", f"/fleets/{self.id}/drivers/{driver_id}")
             raise e
-        return FleetDriver(**driver_res)
+        return driver
 
     def remove_driver(self, driver_id: str) -> None:
         """Remove a driver from the fleet
