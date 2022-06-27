@@ -1,11 +1,10 @@
+import motorpy.models as models
 from pydantic import Field
 from typing import Optional
-from motorpy.models import PrivateAPIHandler
-from motorpy.models.drivers import Driver
 from datetime import datetime
 
 
-class FleetDriver(PrivateAPIHandler):
+class FleetDriver(models.PrivateAPIHandler):
     is_vehicle_manager: bool = Field(
         default=False,
         alias="isVehicleManager"
@@ -31,7 +30,7 @@ class FleetDriver(PrivateAPIHandler):
         alias="createdAt"
     )
 
-    driver: Optional[Driver] = Field(
+    driver: Optional['models.Driver'] = Field(
         default=None,
         alias="driver"
     )

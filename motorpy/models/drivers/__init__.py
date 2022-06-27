@@ -2,9 +2,10 @@ import motorpy.models as models
 from pydantic import Field, parse_obj_as
 from datetime import datetime, date
 from typing import Optional, List
-from motorpy.models.billing import BillingAccount
-from motorpy.models.fleets import Fleet
-from motorpy.models.risk import Risk
+# from motorpy.models.billing import BillingAccount
+# from motorpy.models.fleets import Fleet
+# from motorpy.models.risk import Risk
+
 
 class Driver(models.custom.PrivateAPIHandler):
     # identifiers
@@ -149,7 +150,7 @@ class Driver(models.custom.PrivateAPIHandler):
         default=0,
         alias="vehicleCount"
     )
-    risk: Optional[Risk] = Field(
+    risk: Optional[models.risk.Risk] = Field(
         default=None,
         alias="risk"
     )
@@ -168,10 +169,22 @@ class Driver(models.custom.PrivateAPIHandler):
         alias="createdAt"
     )
 
-    fleets: Optional[List[Fleet]] = Field(
-        default_factory=list,
+    # implementing fleets using a property to avoid circular imports
+    fleet_raw: List[dict] = Field(
+        default=[],
         alias="fleets"
     )
+
+    @property
+    def fleets(self) -> List['models.fleets.Fleet']:
+        """List fleets for this driver.
+
+        Returns:
+            List[Fleet]: fleets
+        """
+        if not self.fleet_raw:
+            return []
+        return parse_obj_as(Optional[List[models.fleets.Fleet]], self.fleet_raw or [])
 
     def to_dict(self, api_format: bool = False, **kwargs):
         return self.dict(exclude={"_api"}, by_alias=api_format)
@@ -192,7 +205,7 @@ class Driver(models.custom.PrivateAPIHandler):
             return f"{self.first_name} {self.middle_name} {self.last_name}"
         return f"{self.first_name} {self.last_name}"
 
-    def list_billing_accounts(self, primary_only: bool = False) -> List[BillingAccount]:
+    def list_billing_accounts(self, primary_only: bool = False) -> List[models.billing.BillingAccount]:
         """List billing accounts for this driver.
 
         Args:
@@ -209,9 +222,9 @@ class Driver(models.custom.PrivateAPIHandler):
                 "primary": primary_only,
             }
         )
-        return parse_obj_as(Optional[List[BillingAccount]], accounts)
+        return parse_obj_as(Optional[List[models.billing.BillingAccount]], accounts)
 
-    def get_billing_account(self, id: str) -> BillingAccount:
+    def get_billing_account(self, id: str) -> models.billing.BillingAccount:
         """Get a billing account for this driver.
 
         Args:
@@ -223,26 +236,29 @@ class Driver(models.custom.PrivateAPIHandler):
         self._check_id()
         if not id:
             raise ValueError("Billing account id is required")
-        return parse_obj_as(BillingAccount, self.api.request(
+        return parse_obj_as(models.billing.BillingAccount, self.api.request(
             "GET",
             f"/drivers/{self.id}/billing-accounts/{id}"
         ))
 
-    def get_primary_billing_account(self) -> Optional[BillingAccount]:
+    def get_primary_billing_account(self) -> Optional[models.billing.BillingAccount]:
         """Find the primary billing account for this driver.
 
         Returns:
             Optional[BillingAccount]: primary billing account
         """
-        res: List[BillingAccount] = self.list_billing_accounts(
+        res: List[models.billing.BillingAccount] = self.list_billing_accounts(
             primary_only=True)
         # make another request for the full account details
         return self.get_billing_account(res[0].id) if res else None
-    
-    def list_fleets(self, full=True) -> List[Fleet]:
+
+    def list_fleets(self, full=True) -> List['models.fleets.Fleet']:
         """List fleets for this driver. This will call the API foreach fleet to get all fields unless specified otherwise."""
         if not self.fleets:
             return []
         if not full:
             return self.fleets or []
         return [f.refresh() for f in self.fleets]
+
+
+Driver.update_forward_refs()

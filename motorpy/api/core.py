@@ -1,5 +1,6 @@
 import aiohttp
 import requests
+import os
 import asyncio
 from motorpy.auth import Auth
 
@@ -128,7 +129,7 @@ class APIHandlerNoAuth:
         """Close the asynchronous session."""
         if self.async_requests:
             self.session.close()
-    
+
     def __del__(self) -> None:
         # ! this is only called when ref count is 0
         # so in practice this wont be called but just in case
@@ -226,7 +227,7 @@ class APIHandler(APIHandlerNoAuth):
 
         body, status = self._make_request(
             method, f"{self.org_url}/{endpoint}", params=params, data=data, headers=headers)
-        
+
         if status == 401:
             self.check_auth()
             headers.update(self.auth.get_headers())
@@ -237,6 +238,33 @@ class APIHandler(APIHandlerNoAuth):
             return body
         else:
             raise APIError(f"API responded with {status} - {body}")
+
+    def download_file(self, url: str, file_location: str, save_dir: str = None) -> str:
+        """Downloads a file to local disk.
+
+        Args:
+            url (str): the record URL (eg. driver URL).
+            file_location (str): the file location.
+            save_dir (str, optional): the directory to save the file to. Defaults to None.
+
+        Returns:
+            str: the file location
+        """
+        self.check_auth()
+
+        local_filename = file_location.split('/')[-1]
+        if save_dir is None:
+            save_loc = os.path.join(os.getcwd(), local_filename)
+        else:
+            save_loc = os.path.abspath(save_dir)
+            save_loc = os.path.join(save_loc, local_filename)
+
+        with requests.get(os.path.join(url, file_location), headers=self.auth.get_headers(), stream=True) as r:
+            r.raise_for_status()
+            with open(save_loc, 'wb') as f:
+                for chunk in r.iter_content(chunk_size=8192):
+                    f.write(chunk)
+        return save_loc
 
     def telematics_request(self,
                            method: str,

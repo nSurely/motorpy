@@ -1,13 +1,13 @@
 from pydantic import Field
 from typing import Optional, List, Union, Generator
-from motorpy.models import PrivateAPIHandler
-from motorpy.models.risk import Risk
+import motorpy.models as models
+# from motorpy.models.risk import Risk
 from datetime import datetime
 from motorpy.models.constants import LANG
 from .drivers import FleetDriver
 
 
-class Fleet(PrivateAPIHandler):
+class Fleet(models.PrivateAPIHandler):
     """
     Fleet model
     """
@@ -55,8 +55,8 @@ class Fleet(PrivateAPIHandler):
         default={},
         alias="translations"
     )
-    risk: Risk = Field(
-        default=Risk(),
+    risk: models.risk.Risk = Field(
+        default=models.risk.Risk(),
         alias="risk"
     )
     vehicle_count: int = Field(
@@ -71,7 +71,7 @@ class Fleet(PrivateAPIHandler):
         default=0,
         alias="subFleetCount"
     )
-    risk: Risk = Field(
+    risk: models.risk.Risk = Field(
         default=None,
         alias="risk"
     )
@@ -335,3 +335,5 @@ class Fleet(PrivateAPIHandler):
             f"/fleets/{self.id}/vehicles",
             data=data
         )
+
+Fleet.update_forward_refs()
