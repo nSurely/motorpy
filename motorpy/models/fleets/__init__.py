@@ -5,6 +5,7 @@ import motorpy.models as models
 from datetime import datetime
 from motorpy.models.constants import LANG
 from .drivers import FleetDriver
+from .vehicles import FleetVehicle
 
 
 class Fleet(models.PrivateAPIHandler):
@@ -233,7 +234,7 @@ class Fleet(models.PrivateAPIHandler):
 
         if not vehicle_ids:
             return driver
-        
+
         try:
             if isinstance(vehicle_expires_at, datetime) or vehicle_expires_at is None:
                 for vehicle_id in vehicle_ids:
@@ -314,7 +315,7 @@ class Fleet(models.PrivateAPIHandler):
         for d in self.api.batch_fetch(f"/fleets/{self.id}/drivers"):
             yield FleetDriver(**d)
 
-    def assign_vehicle(self, vehicle_id: str, is_active: bool = True, is_open_to_all: bool = True) -> dict:
+    def assign_vehicle(self, vehicle_id: str, is_active: bool = True, is_open_to_all: bool = True) -> FleetVehicle:
         """Assign a vehicle to the fleet
 
         Args:
@@ -330,10 +331,54 @@ class Fleet(models.PrivateAPIHandler):
             "isOpenToAll": is_open_to_all,
             "registeredVehicleId": vehicle_id
         }
-        return self.api.request(
+        return FleetVehicle(**self.api.request(
             "POST",
             f"/fleets/{self.id}/vehicles",
             data=data
+        ))
+
+    def remove_vehicle(self, vehicle_id: str) -> None:
+        """Remove a vehicle from the fleet
+
+        Args:
+            vehicle_id (str): the vehicle ID
+        """
+        self.api.request(
+            "DELETE", f"/fleets/{self.id}/vehicles/{vehicle_id}"
         )
+
+    def update_vehicle_assignment(self,
+                                  vehicle_id: str,
+                                  is_active: bool = True,
+                                  is_open_to_all: bool = True) -> FleetVehicle:
+        """Update a vehicle assignment
+
+        Args:
+            vehicle_id (str): the vehicle ID
+            is_active (bool, optional): if active in the fleet. Defaults to True.
+            is_open_to_all (bool, optional): if open to all drivers. Defaults to True.
+
+        Returns:
+            dict: the API response
+        """
+        data = {
+            "isActive": is_active,
+            "isOpenToAll": is_open_to_all
+        }
+        return FleetVehicle(**self.api.request(
+            "PATCH",
+            f"/fleets/{self.id}/vehicles/{vehicle_id}",
+            data=data
+        ))
+
+    def list_vehicles(self) -> Generator[List[FleetVehicle], None, None]:
+        """List the vehicles in the fleet
+
+        Returns:
+            List[FleetVehicle]: the vehicles
+        """
+        for v in self.api.batch_fetch(f"/fleets/{self.id}/vehicles"):
+            yield FleetVehicle(**v)
+
 
 Fleet.update_forward_refs()
