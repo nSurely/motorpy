@@ -181,6 +181,7 @@ class Driver(models.custom.PrivateAPIHandler):
         if not self.id:
             raise ValueError("Driver id is required")
 
+    @property
     def full_name(self) -> str:
         """Get the driver's full name.
 

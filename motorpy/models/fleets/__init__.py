@@ -1,10 +1,10 @@
 from pydantic import Field
-from typing import Optional, List, Any
-from motorpy import api
+from typing import Optional, List, Union, Generator
 from motorpy.models import PrivateAPIHandler
 from motorpy.models.risk import Risk
 from datetime import datetime
 from motorpy.models.constants import LANG
+from .drivers import FleetDriver
 
 
 class Fleet(PrivateAPIHandler):
@@ -187,3 +187,147 @@ class Fleet(PrivateAPIHandler):
         if not self.has_parent():
             return None
         return Fleet(**self.api.request("GET", f"/fleets/{self.parent_id}"))
+
+    def assign_driver(self,
+                      driver_id: str,
+                      is_vehicle_manager: bool = False,
+                      is_driver_manager: bool = False,
+                      is_billing_manager: bool = False,
+                      expires_at: datetime = None,
+                      is_active: bool = True,
+                      vehicle_ids: List[str] = None,
+                      vehicle_expires_at: Union[List[datetime], datetime] = None) -> dict:
+        """Assign a driver to the fleet
+
+        Args:
+            driver_id (str): the driver ID
+            is_vehicle_manager (bool, optional): can manage vehicles. Defaults to False.
+            is_driver_manager (bool, optional): can manage drivers. Defaults to False.
+            is_billing_manager (bool, optional): can manage billing details. Defaults to False.
+            expires_at (datetime, optional): if and when the driver assignment expires. Defaults to None.
+            is_active (bool, optional): if active in the fleet. Defaults to True.
+            vehicle_ids (List[str], optional): the vehicle IDs to assign to the driver. Defaults to None.
+            vehicle_expires_at (List[datetime], optional): the vehicle assignment expiration dates. Defaults to None.
+                Note: Supply a single datetime for all vehicles, or a list of datetimes for each vehicle.
+
+        Returns:
+            dict: the API response
+        """
+        if vehicle_ids is None:
+            vehicle_ids = []
+        data = {
+            "driverId": driver_id,
+            "isVehicleManager": is_vehicle_manager,
+            "isDriverManager": is_driver_manager,
+            "isBillingManager": is_billing_manager,
+            "expiresAt": expires_at.isoformat() if expires_at else None,
+            "isActive": is_active
+        }
+        driver_res = self.api.request(
+            "POST",
+            f"/fleets/{self.id}/drivers",
+            data=data
+        )
+        if not vehicle_ids:
+            return driver_res
+        try:
+            if isinstance(vehicle_expires_at, datetime) or vehicle_expires_at is None:
+                for vehicle_id in vehicle_ids:
+                    self.api.request(
+                        "POST",
+                        f"/fleets/{self.id}/drivers/{driver_id}/vehicles/{vehicle_id}",
+                        data={
+                            "expiresAt": vehicle_expires_at.isoformat() if vehicle_expires_at else None
+                        }
+                    )
+                return driver_res
+
+            # each vehicle has a different expiration date
+            for vehicle_id, expires_at in zip(vehicle_ids, vehicle_expires_at):
+                self.api.request(
+                    "POST",
+                    f"/fleets/{self.id}/drivers/{driver_id}/vehicles/{vehicle_id}",
+                    data={
+                        "expiresAt": expires_at.isoformat() if expires_at else None
+                    }
+                )
+        except Exception as e:
+            # equivalent to a rollback
+            self.api.request(
+                "DELETE", f"/fleets/{self.id}/drivers/{driver_id}")
+            raise e
+        return FleetDriver(**driver_res)
+
+    def remove_driver(self, driver_id: str) -> None:
+        """Remove a driver from the fleet
+
+        Args:
+            driver_id (str): the driver ID
+        """
+        self.api.request(
+            "DELETE", f"/fleets/{self.id}/drivers/{driver_id}"
+        )
+
+    def update_driver_assignment(self,
+                                 driver_id: str,
+                                 is_vehicle_manager: bool = False,
+                                 is_driver_manager: bool = False,
+                                 is_billing_manager: bool = False,
+                                 expires_at: datetime = None,
+                                 is_active: bool = True) -> FleetDriver:
+        """Update a driver assignment
+
+        Args:
+            driver_id (str): the driver ID
+            is_vehicle_manager (bool, optional): can manage vehicles. Defaults to False.
+            is_driver_manager (bool, optional): can manage drivers. Defaults to False.
+            is_billing_manager (bool, optional): can manage billing details. Defaults to False.
+            expires_at (datetime, optional): if and when the driver assignment expires. Defaults to None.
+            is_active (bool, optional): if active in the fleet. Defaults to True.
+
+        Returns:
+            dict: the API response
+        """
+        data = {
+            "isVehicleManager": is_vehicle_manager,
+            "isDriverManager": is_driver_manager,
+            "isBillingManager": is_billing_manager,
+            "expiresAt": expires_at.isoformat() if expires_at else None,
+            "isActive": is_active
+        }
+        return FleetDriver(**self.api.request(
+            "PATCH",
+            f"/fleets/{self.id}/drivers/{driver_id}",
+            data=data
+        ))
+
+    def list_drivers(self) -> Generator[List[FleetDriver], None, None]:
+        """List the drivers in the fleet
+
+        Returns:
+            List[FleetDriver]: the drivers
+        """
+        for d in self.api.batch_fetch(f"/fleets/{self.id}/drivers"):
+            yield FleetDriver(**d)
+
+    def assign_vehicle(self, vehicle_id: str, is_active: bool = True, is_open_to_all: bool = True) -> dict:
+        """Assign a vehicle to the fleet
+
+        Args:
+            vehicle_id (str): the vehicle ID
+            is_active (bool, optional): if active in the fleet. Defaults to True.
+            is_open_to_all (bool, optional): if open to all drivers. Defaults to True.
+
+        Returns:
+            dict: the API response
+        """
+        data = {
+            "isActive": is_active,
+            "isOpenToAll": is_open_to_all,
+            "registeredVehicleId": vehicle_id
+        }
+        return self.api.request(
+            "POST",
+            f"/fleets/{self.id}/vehicles",
+            data=data
+        )
