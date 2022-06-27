@@ -186,6 +186,11 @@ class Driver(models.custom.PrivateAPIHandler):
             return []
         return parse_obj_as(Optional[List[models.fleets.Fleet]], self.fleet_raw or [])
 
+    @fleets.setter
+    def fleets(self, fleets: List['models.fleets.Fleet']) -> None:
+        """Set the fleets for this driver. This will call the API foreach fleet to get all fields unless specified otherwise."""
+        self.fleet_raw = [f.to_dict(by_alias=True) for f in fleets]
+
     def to_dict(self, api_format: bool = False, **kwargs):
         return self.dict(exclude={"_api"}, by_alias=api_format)
 
