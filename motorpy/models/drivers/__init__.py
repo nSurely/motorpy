@@ -186,10 +186,10 @@ class Driver(models.custom.PrivateAPIHandler, models.risk.CommonRisk):
         if not self.vehicles_raw:
             self.vehicles_raw = self.api.request(
                 "GET", f"drivers/{self.id}/vehicles")
-        return parse_obj_as(List[models.vehicles.DriverVehicle], self.vehicles_raw or [])
+        return [models.vehicles.DriverVehicle(api=self.api, **v) for v in (self.vehicles_raw or [])]
 
     def to_dict(self, api_format: bool = False, **kwargs):
-        return self.dict(exclude={"_api"}, by_alias=api_format)
+        return self.dict(exclude={"api"}, by_alias=api_format)
 
     def _check_id(self) -> None:
         """Check that the driver has an ID."""
@@ -224,7 +224,7 @@ class Driver(models.custom.PrivateAPIHandler, models.risk.CommonRisk):
                 "primary": primary_only,
             }
         )
-        return parse_obj_as(Optional[List[models.billing.BillingAccount]], accounts)
+        return [models.billing.BillingAccount(api=self.api, **ba) for ba in (accounts or [])]
 
     @property
     def billing_accounts(self) -> List[models.billing.BillingAccount]:
@@ -247,7 +247,7 @@ class Driver(models.custom.PrivateAPIHandler, models.risk.CommonRisk):
         self._check_id()
         if not id:
             raise ValueError("Billing account id is required")
-        return parse_obj_as(models.billing.BillingAccount, self.api.request(
+        return models.billing.BillingAccount(api=self.api, **self.api.request(
             "GET",
             f"/drivers/{self.id}/billing-accounts/{id}"
         ))
@@ -281,7 +281,7 @@ class Driver(models.custom.PrivateAPIHandler, models.risk.CommonRisk):
         """
         if not self.fleet_raw:
             return []
-        return parse_obj_as(Optional[List[models.fleets.Fleet]], self.fleet_raw or [])
+        return [models.fleets.Fleet(api=self.api, **f) for f in (self.fleet_raw or [])]
 
     @fleets.setter
     def fleets(self, fleets: List['models.fleets.Fleet']) -> None:

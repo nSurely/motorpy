@@ -187,7 +187,7 @@ class Fleet(models.PrivateAPIHandler):
         """
         if not self.has_parent():
             return None
-        return Fleet(**self.api.request("GET", f"/fleets/{self.parent_id}"))
+        return Fleet(api=self.api, **self.api.request("GET", f"/fleets/{self.parent_id}"))
 
     def assign_driver(self,
                       driver_id: str,
@@ -229,7 +229,7 @@ class Fleet(models.PrivateAPIHandler):
             f"/fleets/{self.id}/drivers",
             data=data
         )
-        driver = FleetDriver(**driver_res)
+        driver = FleetDriver(api=self.api, **driver_res)
         driver.api = self.api
 
         if not vehicle_ids:
@@ -300,7 +300,7 @@ class Fleet(models.PrivateAPIHandler):
             "expiresAt": expires_at.isoformat() if expires_at else None,
             "isActive": is_active
         }
-        return FleetDriver(**self.api.request(
+        return FleetDriver(api=self.api, **self.api.request(
             "PATCH",
             f"/fleets/{self.id}/drivers/{driver_id}",
             data=data
@@ -313,7 +313,7 @@ class Fleet(models.PrivateAPIHandler):
             List[FleetDriver]: the drivers
         """
         for d in self.api.batch_fetch(f"/fleets/{self.id}/drivers"):
-            yield FleetDriver(**d)
+            yield FleetDriver(api=self.api, **d)
 
     def assign_vehicle(self, vehicle_id: str, is_active: bool = True, is_open_to_all: bool = True) -> FleetVehicle:
         """Assign a vehicle to the fleet
@@ -331,7 +331,7 @@ class Fleet(models.PrivateAPIHandler):
             "isOpenToAll": is_open_to_all,
             "registeredVehicleId": vehicle_id
         }
-        return FleetVehicle(**self.api.request(
+        return FleetVehicle(api=self.api, **self.api.request(
             "POST",
             f"/fleets/{self.id}/vehicles",
             data=data
@@ -365,7 +365,7 @@ class Fleet(models.PrivateAPIHandler):
             "isActive": is_active,
             "isOpenToAll": is_open_to_all
         }
-        return FleetVehicle(**self.api.request(
+        return FleetVehicle(api=self.api, **self.api.request(
             "PATCH",
             f"/fleets/{self.id}/vehicles/{vehicle_id}",
             data=data
@@ -378,7 +378,7 @@ class Fleet(models.PrivateAPIHandler):
             List[FleetVehicle]: the vehicles
         """
         for v in self.api.batch_fetch(f"/fleets/{self.id}/vehicles"):
-            yield FleetVehicle(**v)
+            yield FleetVehicle(api=self.api, **v)
 
 
 Fleet.update_forward_refs()
