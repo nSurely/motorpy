@@ -93,5 +93,7 @@ class DriverVehicle(PrivateAPIHandler, CommonRisk):
 
     class Config:
         anystr_strip_whitespace = True
+    
+    # def list_policies
 
 DriverVehicle.update_forward_refs()

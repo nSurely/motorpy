@@ -207,6 +207,8 @@ class Driver(models.custom.PrivateAPIHandler, models.risk.CommonRisk):
             return f"{self.first_name} {self.middle_name} {self.last_name}"
         return f"{self.first_name} {self.last_name}"
 
+    # billing
+
     def list_billing_accounts(self, primary_only: bool = False) -> List[models.billing.BillingAccount]:
         """List billing accounts for this driver.
 
@@ -272,6 +274,8 @@ class Driver(models.custom.PrivateAPIHandler, models.risk.CommonRisk):
         """
         return self.get_primary_billing_account()
 
+    # fleets
+
     @property
     def fleets(self) -> List['models.fleets.Fleet']:
         """List fleets for this driver.
@@ -287,6 +291,17 @@ class Driver(models.custom.PrivateAPIHandler, models.risk.CommonRisk):
     def fleets(self, fleets: List['models.fleets.Fleet']) -> None:
         """Set the fleets for this driver. This will call the API foreach fleet to get all fields unless specified otherwise."""
         self.fleet_raw = [f.to_dict(by_alias=True) for f in fleets]
+
+    # policies
+    def vehicle_policies(self, vehicle_id: str) -> List['models.policies.Policy']:
+        """List policies for this driver.
+
+        Returns:
+            List[Policy]: policies
+        """
+        return [models.policies.Policy(api=self.api, **p) for p in (self.api.request(
+                "GET", f"drivers/{self.id}/vehicles/{vehicle_id}/policy"
+                ) or [])]
 
 
 Driver.update_forward_refs()
