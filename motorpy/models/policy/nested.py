@@ -1,4 +1,5 @@
 from pydantic import Field
+from typing import Optional
 
 from .base import PolicyBase
 from .approval import PolicyApproval
@@ -107,3 +108,57 @@ class Policy(PolicyBase):
 
     class Config:
         allow_population_by_field_name = True
+
+    def is_cancelled(self) -> bool:
+        """
+        Is the policy cancelled?
+        """
+        return self.cancellation.is_cancelled()
+    
+    def is_approved(self) -> bool:
+        """
+        Is the policy approved?
+        """
+        return self.approval.is_approved()
+    
+    def is_expired(self) -> bool:
+        """
+        Is the policy expired?
+        """
+        return self.duration.is_expired()
+    
+    def is_driver_agreed(self) -> bool:
+        """
+        Has the driver agreed to the policy?
+        """
+        return self.driver.is_agreed()
+    
+    def is_live(self) -> bool:
+        """
+        Is the policy live? ie. active, approved, driver agreed, not cancelled and not expired.
+        """
+        return (
+            self.is_active
+            and self.is_approved()
+            and not self.is_cancelled()
+            and not self.is_expired()
+            and self.is_driver_agreed()
+        )
+    
+    def rate_per_km(self) -> Optional[float]:
+        """
+        The rate per km for the policy.
+
+        Returns:
+            The rate per km for the policy. None, if rates do not apply to the policy.
+        """
+        if not self.rates.rates_active:
+            return None
+        return self.final.final_rates.final_rates_value
+    
+    def premium_amount(self) -> float:
+        """
+        The premium amount for the policy.
+        """
+        return self.final.final_base_premium.base_premium_value
+    

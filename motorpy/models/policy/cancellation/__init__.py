@@ -19,4 +19,7 @@ class PolicyCancellation(PolicyCancellationBase):
 
     class Config:
         allow_population_by_field_name = True
+    
+    def is_cancelled(self):
+        return self.cancellation_at is not None
 

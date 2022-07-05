@@ -28,3 +28,6 @@ class PolicyDriver(PolicyDriverBase):
 
     class Config:
         allow_population_by_field_name = True
+    
+    def is_agreed(self):
+        return self.driver_policy_agreed_at is not None
