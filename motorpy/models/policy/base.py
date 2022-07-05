@@ -5,6 +5,16 @@ from .enums.cover import PolicyCoverType
 
 class PolicyBase(BaseModel):
     "The base policy model. All other models should be nested in a seprate model that inherits this one."
+    uid: str = Field(
+        default=...,
+        alias="id",
+        description="The unique identifier for this policy"
+    )
+    created_at: datetime = Field(
+        default=...,
+        alias="createdAt",
+        description="The date and time this policy record was created"
+    )
     is_active: bool = Field(
         default=True,
         alias="isActivePolicy",
@@ -34,19 +44,6 @@ This field is useful when constructing a multi-use policy, such as a vehicle wit
         default=1,
         alias="maxPassengers",
         description="The maximum number of passengers that can be covered by this policy. This may not apply to all cover types."
-    )
-
-
-class Policy(PolicyBase):
-    uid: str = Field(
-        default=...,
-        alias="id",
-        description="The unique identifier for this policy"
-    )
-    created_at: datetime = Field(
-        default=...,
-        alias="createdAt",
-        description="The date and time this policy record was created"
     )
 
     class Config:

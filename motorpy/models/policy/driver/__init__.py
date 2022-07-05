@@ -23,7 +23,7 @@ class PolicyDriverBase(BaseModel):
     )
 
 
-class PolicyDriverRead(PolicyDriverBase):
+class PolicyDriver(PolicyDriverBase):
     pass
 
     class Config:

@@ -93,7 +93,8 @@ class TestFleets:
 
     def test_update_field(self):
         fleet = Fleet(**self.test_data)
-        fleet.update_field("display", "new_display")
+        # fleet.update("display", "new_display")
+        fleet.display = "new_display"
         assert fleet.display == "new_display"
 
         assert 'display' in fleet.__fields_set__

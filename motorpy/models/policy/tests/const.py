@@ -1,8 +1,10 @@
-from ..org_config import PolicyOrgConfigNestedRead
+from ..org_config import PolicyOrgConfig
 from datetime import datetime
 from uuid import uuid4
 
 FULL = {
+    "id": "DRV-123",
+    "createdAt": "2020-01-01T00:00:00.000Z",
     "isActivePolicy": True,
     "sumInsured": 100.00,
     "canRenew": True,
@@ -45,15 +47,15 @@ FULL = {
                                 -122.4,
                                 37.8
                             ],
-                            [
+                        [
                                 -122.4,
                                 37.9
                             ],
-                            [
+                        [
                                 -122.3,
                                 37.9
                             ],
-                            [
+                        [
                                 -122.4,
                                 37.8
                             ]
@@ -183,9 +185,9 @@ FULL = {
 GRACE_MINS = 60*24*7
 
 # creating an empty policy config to get attrs
-ORG_ATTRS = PolicyOrgConfigNestedRead(policy_group="drv")
+ORG_ATTRS = PolicyOrgConfig(policy_group="drv")
 # create with shared fields (not all fields are used in config)
-ORG_CONF = PolicyOrgConfigNestedRead(
+ORG_CONF = PolicyOrgConfig(
     policy_group="drv",
     policy_config="custom",
     cover_type={"comprehensive"},

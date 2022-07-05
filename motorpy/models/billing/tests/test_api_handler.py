@@ -14,9 +14,9 @@ class TestApiHandler:
             id="123",
         )
 
-        assert hasattr(b, "_api")
+        assert hasattr(b, "api")
 
         export = b.dict()
-        assert "_api" not in export
-        assert "_api" not in str(b.__str__)
-        assert "_api" not in str(b.__repr__)
+        assert "api" not in export
+        # assert "api" not in str(b.__str__)
+        # assert "api" not in str(b.__repr__)

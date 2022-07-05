@@ -31,15 +31,7 @@ class PolicyTermsBase(BaseModel):
     )
 
 
-class PolicyTermsCreate(PolicyTermsBase):
-    pass
-
-
-class PolicyTermsUpdate(PolicyTermsBase):
-    pass
-
-
-class PolicyTermsRead(PolicyTermsBase):
+class PolicyTerms(PolicyTermsBase):
     pass
 
     class Config:

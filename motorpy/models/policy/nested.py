@@ -1,6 +1,6 @@
 from pydantic import Field
 
-from .base import Policy
+from .base import PolicyBase
 from .approval import PolicyApproval
 from .cancellation import PolicyCancellation
 from .config import PolicyConfig
@@ -23,8 +23,7 @@ from .rates import PolicyRates
 from .premium import PolicyBasePremium
 
 
-
-class PolicyNested(Policy):
+class Policy(PolicyBase):
     approval: PolicyApproval = Field(
         default=PolicyApproval(),
         alias="approval",
@@ -108,5 +107,3 @@ class PolicyNested(Policy):
 
     class Config:
         allow_population_by_field_name = True
-
-    

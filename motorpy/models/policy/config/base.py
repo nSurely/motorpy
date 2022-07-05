@@ -23,7 +23,7 @@ class PolicyConfigStandardBase(BaseModel):
     )
 
 
-class PolicyConfigStandardRead(PolicyConfigStandardBase):
+class PolicyConfigStandard(PolicyConfigStandardBase):
     pass
 
     class Config:
