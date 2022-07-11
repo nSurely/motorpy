@@ -1,7 +1,7 @@
 import motorpy.models as models
 from pydantic import Field, parse_obj_as
 from datetime import datetime, date
-from typing import Optional, List
+from typing import Optional, List, Generator
 # from motorpy.models.billing import BillingAccount
 # from motorpy.models.fleets import Fleet
 # from motorpy.models.risk import Risk
@@ -304,17 +304,14 @@ class Driver(models.custom.PrivateAPIHandler, models.risk.CommonRisk):
                     "drvIds": vehicle_id
                 }) or [])]
 
-    def policies(self) -> List['models.policies.Policy']:
+    def list_policies(self, loose_match: bool = True) -> Generator['models.policies.Policy', None, None]:
         """List policies for this driver.
 
         Returns:
-            List[Policy]: policies
+            Generator[Policy]: policies
         """
-        return [models.policies.Policy(api=self.api, **p) for p in (self.api.request(
-                "GET", f"policy", params={
-                    "driverIds": self.id,
-                    "driverLooseMatch": True
-                }) or [])]
+        for p in self.api.batch_fetch(f"policy", params={"driverIds": self.id, "driverLooseMatch": loose_match}):
+            yield models.policies.Policy(api=self.api, **p)
 
 
 Driver.update_forward_refs()

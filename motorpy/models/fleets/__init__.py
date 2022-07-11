@@ -371,7 +371,7 @@ class Fleet(models.PrivateAPIHandler):
             data=data
         ))
 
-    def list_vehicles(self) -> Generator[List[FleetVehicle], None, None]:
+    def list_vehicles(self) -> Generator[FleetVehicle, None, None]:
         """List the vehicles in the fleet
 
         Returns:
@@ -379,6 +379,15 @@ class Fleet(models.PrivateAPIHandler):
         """
         for v in self.api.batch_fetch(f"/fleets/{self.id}/vehicles"):
             yield FleetVehicle(api=self.api, **v)
+
+    def list_policies(self) -> Generator['models.policies.Policy', None, None]:
+        """List all policies for this fleet.
+
+        Returns:
+            List[Policy]: policies
+        """
+        for p in self.api.batch_fetch(f"policy", params={"fleetIds": self.id}):
+            yield models.policies.Policy(api=self.api, **p)
 
 
 Fleet.update_forward_refs()
