@@ -300,8 +300,21 @@ class Driver(models.custom.PrivateAPIHandler, models.risk.CommonRisk):
             List[Policy]: policies
         """
         return [models.policies.Policy(api=self.api, **p) for p in (self.api.request(
-                "GET", f"drivers/{self.id}/vehicles/{vehicle_id}/policy"
-                ) or [])]
+                "GET", f"policy", params={
+                    "drvIds": vehicle_id
+                }) or [])]
+
+    def policies(self) -> List['models.policies.Policy']:
+        """List policies for this driver.
+
+        Returns:
+            List[Policy]: policies
+        """
+        return [models.policies.Policy(api=self.api, **p) for p in (self.api.request(
+                "GET", f"policy", params={
+                    "driverIds": self.id,
+                    "driverLooseMatch": True
+                }) or [])]
 
 
 Driver.update_forward_refs()
