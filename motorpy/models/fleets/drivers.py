@@ -37,8 +37,10 @@ class FleetDriver(models.PrivateAPIHandler):
 
     @property
     def id(self) -> Optional[str]:
+        "Returns the driver ID if the driver is set"
         return self.driver.id if self.driver else None
     
     @property
     def full_name(self) -> Optional[str]:
+        "Returns the driver full name if the driver is set"
         return self.driver.full_name if self.driver else None

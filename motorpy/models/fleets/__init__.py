@@ -375,7 +375,7 @@ class Fleet(models.PrivateAPIHandler):
         """List the vehicles in the fleet
 
         Returns:
-            List[FleetVehicle]: the vehicles
+            Generator[FleetVehicle, None, None]: the vehicle assignments
         """
         for v in self.api.batch_fetch(f"/fleets/{self.id}/vehicles"):
             yield FleetVehicle(api=self.api, **v)
@@ -384,7 +384,7 @@ class Fleet(models.PrivateAPIHandler):
         """List all policies for this fleet.
 
         Returns:
-            List[Policy]: policies
+            Generator[Policy, None, None]: policies
         """
         for p in self.api.batch_fetch(f"policy", params={"fleetIds": self.id}):
             yield models.policies.Policy(api=self.api, **p)

@@ -21,4 +21,5 @@ class FleetVehicle(models.PrivateAPIHandler):
 
     @property
     def id(self) -> Optional[str]:
+        "Returns the vehicle ID if the vehicle is set"
         return self.vehicle.id if self.vehicle else None
