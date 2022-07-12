@@ -394,5 +394,24 @@ class Driver(models.custom.PrivateAPIHandler, models.risk.CommonRisk):
         """
         self._update(persist=persist, **kwargs)
 
+    def list_trackable_models(self) -> List['models.assets.DriverVehicle']:
+        """List trackable models for this driver.
+
+        Returns:
+            List[Asset]: assets
+        """
+        if not self.api.org_data:
+            self.api.refresh_org_data()
+        if self.api.org_data.source_id_type == 'drv':
+            return [drv for drv in self.vehicles if drv.is_active]
+        elif self.api.org_data.source_id_type == 'rv':
+            # returns only active RVs
+            return [drv.vehicle for drv in self.vehicles if drv.is_active and drv.vehicle.is_active]
+        
+        # todo: implement fleet logic
+
+        return []
+
+
 
 Driver.update_forward_refs()

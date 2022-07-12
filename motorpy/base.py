@@ -9,6 +9,7 @@ import motorpy.vehicles as vehicles
 import motorpy.fleets as fleets
 from motorpy.auth import Auth
 from motorpy.api import APIHandler
+from motorpy.api.org import OrgSettings
 
 NAME = "motorpy"
 
@@ -36,6 +37,7 @@ class Motor(drivers.Drivers,
         self.url = url
 
         # all requests are routed through here
+        # this is scoped to a single org id
         self.api = APIHandler(org_id, auth, region, url)
 
         drivers.Drivers.__init__(self, self.api)
@@ -50,3 +52,29 @@ class Motor(drivers.Drivers,
 
     def __exit__(self, exc_type, exc_val, exc_tb):
         self.close()
+    
+    def org_settings(self) -> 'OrgSettings':
+        """Get the organization settings.
+
+        Returns:
+            OrgSettings: the organization settings.
+        """
+        if not self.api.org_data:
+            self.api.refresh_org_data()
+        return self.api.org_data
+    
+    def language(self):
+        """Get the organization language.
+
+        Returns:
+            str: the organization language.
+        """
+        return self.org_settings().default_lang
+    
+    def org_name(self):
+        """Get the organization name.
+
+        Returns:
+            str: the organization name.
+        """
+        return self.org_settings().display_name

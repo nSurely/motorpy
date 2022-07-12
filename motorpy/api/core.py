@@ -5,6 +5,7 @@ import asyncio
 from motorpy.auth import Auth
 
 from .exceptions import APIError
+from .org import OrgSettings
 from typing import Generator, List, Optional, Tuple
 
 
@@ -18,7 +19,7 @@ def _make_request(method: str, url: str,
     """
     res = requests.request(method, url, headers=headers,
                            params=params, data=data, timeout=timeout)
-    return res.json() if res.json() else None, res.status_code
+    return res.json() if res.json() and res.status_code != 204 else None, res.status_code
 
 
 async def _async_request(session: aiohttp.ClientSession,
@@ -32,7 +33,7 @@ async def _async_request(session: aiohttp.ClientSession,
     Make asynchronous request to the API.
     """
     async with session.request(method, url, params=params, data=data, headers=headers, timeout=timeout) as res:
-        return await res.json() if await res.json() else None, res.status
+        return await res.json() if await res.json() and res.status != 204 else None, res.status
 
 
 class APIHandlerNoAuth:
@@ -71,7 +72,7 @@ class APIHandlerNoAuth:
 
         # org data
         # contains the public org data for the application behaviour
-        self.org_data: dict = None
+        self.org_data: OrgSettings = None
 
         # check this on recursion
         self._org_data_refreshing = False
@@ -100,18 +101,6 @@ class APIHandlerNoAuth:
                                                       timeout=self.timeout))
         return body, status
 
-    def refresh_org_data(self) -> None:
-        """Refresh the org data."""
-        try:
-            self._org_data_refreshing = True
-            self.org_data = self.request(
-                "GET",
-                endpoint=None,
-                url_override=f"public/{self.org_id}"
-            )
-        finally:
-            self._org_data_refreshing = False
-
     def request(self,
                 method: str,
                 endpoint: str,
@@ -127,6 +116,7 @@ class APIHandlerNoAuth:
             params (dict, optional): query params. Defaults to None.
             data (dict, optional): body. Defaults to None.
             headers (dict, optional): headers. Defaults to None.
+            url_override (str, optional): override the URL (must be a full URL). Defaults to None.
 
         Raises:
             APIError: an API error occurred.
@@ -138,7 +128,7 @@ class APIHandlerNoAuth:
             self.refresh_org_data()
 
         body, status = self._loop_request(
-            method, f"{self.org_url}/{endpoint}" if not url_override else url_override,
+            method, f"{self.org_url}/{endpoint}" if url_override is None else url_override,
             params=params,
             data=data,
             headers=headers)
@@ -147,6 +137,18 @@ class APIHandlerNoAuth:
             return body
         else:
             raise APIError(f"API responded with {status}")
+
+    def refresh_org_data(self) -> None:
+        """Refresh the org data."""
+        try:
+            self._org_data_refreshing = True
+            self.org_data = OrgSettings(**self.request(
+                "GET",
+                endpoint=None,
+                url_override=f"{self.url}/public/{self.org_id}"
+            ))
+        finally:
+            self._org_data_refreshing = False
 
     def close_session(self) -> None:
         """Close the asynchronous session."""
@@ -227,7 +229,8 @@ class APIHandler(APIHandlerNoAuth):
                 endpoint: str,
                 params: dict = None,
                 data: dict = None,
-                headers: dict = None) -> dict:
+                headers: dict = None,
+                url_override: str = None) -> dict:
         """Make a request to the API.
 
         Args:
@@ -236,6 +239,7 @@ class APIHandler(APIHandlerNoAuth):
             params (dict, optional): query params. Defaults to None.
             data (dict, optional): body. Defaults to None.
             headers (dict, optional): headers. Defaults to None.
+            url_override (str, optional): override the URL (must be a full URL). Defaults to None.
 
         Raises:
             APIError: an API error occurred.
@@ -249,13 +253,18 @@ class APIHandler(APIHandlerNoAuth):
         self.check_auth()
 
         body, status = self._make_request(
-            method, f"{self.org_url}/{endpoint}", params=params, data=data, headers=headers)
+            method, f"{self.org_url}/{endpoint}" if url_override is None else url_override,
+            params=params, data=data, headers=headers)
 
         if status == 401:
             self.check_auth()
             headers.update(self.auth.get_headers())
             body, status = self._make_request(
-                method, f"{self.org_url}/{endpoint}", params=params, data=data, headers=headers)
+                method,
+                f"{self.org_url}/{endpoint}" if url_override is None else url_override,
+                params=params,
+                data=data,
+                headers=headers)
 
         if status < 300:
             return body
