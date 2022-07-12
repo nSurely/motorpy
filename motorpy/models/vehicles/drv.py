@@ -9,7 +9,7 @@ from .rv import Vehicle
 
 class DriverVehicle(PrivateAPIHandler, CommonRisk):
     id: str = Field(
-        default=...,
+        default=None,
         alias="id",
         title="RV ID",
         description="The unique ID of this registered vehicle."
@@ -92,6 +92,11 @@ class DriverVehicle(PrivateAPIHandler, CommonRisk):
         description="The vehicle this DRV is associated with."
     )
 
+    # not returned from the API, set manually
+    driver_id: str = Field(
+        default=None
+    )
+
     class Config:
         anystr_strip_whitespace = True
 
@@ -132,6 +137,61 @@ class DriverVehicle(PrivateAPIHandler, CommonRisk):
             api_handler=self.api,
             record_id=self.id,
         )
+
+    def _check_id(self) -> None:
+        if not self.driver_id or not self.id:
+            raise ValueError("Id and driver_id must be set.")
+
+    def refresh(self) -> None:
+        """
+        Refresh the model from the API.
+        """
+        self._check_id()
+        api = self.api
+        driver_id = self.driver_id
+        self.__init__(
+            **self.api.request("GET",
+                               f"/drivers/{self.driver_id}/vehicles/{self.id}"),
+            api=api,
+            driver_id=driver_id
+        )
+
+    def delete(self) -> None:
+        """
+        Delete the driver vehicle via the API.
+        """
+        self._check_id()
+        self.api.request(
+            "DELETE",
+            f"/drivers/{self.driver_id}/vehicles/{self.id}"
+        )
+
+    def save(self, fields: dict = None) -> Optional[dict]:
+        """
+        Persist any changes in the API.
+
+        Args:
+            fields (dict, optional): the API formatted fields to update. If not supplied, any set fields in the model will be updated in the API. Defaults to None.
+        """
+        self._check_id()
+
+        return self._save(
+            url=f"/drivers/{self.driver_id}/vehicles/{self.id}",
+            fields=fields,
+            exclude={'driver_id', 'vehicle'}
+        )
+    
+    def update(self, persist: bool = False, **kwargs) -> None:
+        """
+        Update a field on the model, call save or keyword persist to persist changes in the API.
+
+        Args:
+            persist (bool): whether to persist the changes to the API. Defaults to False.
+            **kwargs: the model fields to update.
+
+        Note: when doing multiple updates, it is recommended to call update() after all updates are made.
+        """
+        self._update(persist=persist, **kwargs)
 
 
 DriverVehicle.update_forward_refs()

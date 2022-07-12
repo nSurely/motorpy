@@ -26,7 +26,7 @@ class VehicleCategory(str, Enum):
 
 
 class VehicleType(PrivateAPIHandler):
-    id: str = Field(default=...)
+    id: str = Field(default=None)
     external_id: Optional[str] = Field(
         default=None,
         alias="externalId"
@@ -235,3 +235,56 @@ class VehicleType(PrivateAPIHandler):
     class Config:
         allow_population_by_field_name = True
         anystr_strip_whitespace = True
+    
+    def _check_id(self) -> None:
+        if not self.id:
+            raise ValueError("id must be set.")
+
+    def refresh(self) -> None:
+        """
+        Refresh the model from the API.
+        """
+        self._check_id()
+        api = self.api
+        self.__init__(
+            **self.api.request("GET",
+                               f"/vehicles/{self.id}"),
+            api=api
+        )
+
+    def delete(self) -> None:
+        """
+        Delete this record via the API.
+        """
+        self._check_id()
+        self.api.request(
+            "DELETE",
+            f"/vehicles/{self.id}"
+        )
+
+    def save(self, fields: dict = None) -> Optional[dict]:
+        """
+        Persist any changes in the API.
+
+        Args:
+            fields (dict, optional): the API formatted fields to update. If not supplied, any set fields in the model will be updated in the API. Defaults to None.
+        """
+        self._check_id()
+
+        return self._save(
+            url=f"/vehicles/{self.id}",
+            fields=fields,
+            exclude=None
+        )
+
+    def update(self, persist: bool = False, **kwargs) -> None:
+        """
+        Update a field on the model, call save or keyword persist to persist changes in the API.
+
+        Args:
+            persist (bool): whether to persist the changes to the API. Defaults to False.
+            **kwargs: the model fields to update.
+
+        Note: when doing multiple updates, it is recommended to call update() after all updates are made.
+        """
+        self._update(persist=persist, **kwargs)

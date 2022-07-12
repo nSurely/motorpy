@@ -164,6 +164,19 @@ class Policy(PolicyBase):
         """
         return self.final.final_base_premium.base_premium_value
 
+    def refresh(self) -> None:
+        """
+        Refresh the policy model from the API.
+        """
+        api = self.api
+        self.__init__(**self.api.request("GET", f"/policy/{self.id}"), api=api)
+
+    def delete(self) -> None:
+        """
+        Delete the policy via the API.
+        """
+        self.api.request("DELETE", f"/policy/{self.id}")
+
     def create(self,
                api_handler,
                record_id: str,
@@ -251,5 +264,5 @@ class Policy(PolicyBase):
                                       exclude_unset=True
                                   ))
         # reset with the new policy created by the API
-        self = self(api=api_handler, **res)
+        self.__init__(api=api_handler, **res)
         return self

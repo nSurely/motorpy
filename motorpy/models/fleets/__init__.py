@@ -127,59 +127,58 @@ class Fleet(models.PrivateAPIHandler):
         """Get the tags for the fleet."""
         return self.tags.split(",") if self.tags else []
 
-    def update(self, persist: bool = False, **kwargs) -> None:
-        """
-        Update a field on the fleet model, call update to persist changes in the API.
+    def _check_id(self) -> None:
+        if not self.id:
+            raise ValueError("id must be set.")
 
-        Args:
-            field (str): the field to update
-            value (Any): the value to set the field to
-            persist (bool): whether to persist the changes to the API. Defaults to False.
-
-        Note: when doing multiple updates, it is recommended to call update() after all updates are made.
+    def refresh(self) -> None:
         """
-        if not kwargs:
-            return
-        for key, value in kwargs.items():
-            object.__setattr__(self, key, value)
-            self.__fields_set__.add(key)
-        if persist:
-            self.save()
+        Refresh the model from the API.
+        """
+        self._check_id()
+        api = self.api
+        self.__init__(
+            **self.api.request("GET",
+                               f"/fleets/{self.id}"),
+            api=api
+        )
+
+    def delete(self) -> None:
+        """
+        Delete this record via the API.
+        """
+        self._check_id()
+        self.api.request(
+            "DELETE",
+            f"/fleets/{self.id}"
+        )
 
     def save(self, fields: dict = None) -> Optional[dict]:
         """
-        Update the fleet via the API.
+        Persist any changes in the API.
 
         Args:
             fields (dict, optional): the API formatted fields to update. If not supplied, any set fields in the model will be updated in the API. Defaults to None.
         """
-        data = self.dict(
-            by_alias=True,
-            exclude={'api', 'id'},
-            skip_defaults=True,
-            exclude_unset=True
-        ) if not fields else fields
-        print(data)
-        if not data:
-            return
-        return self.api.request(
-            "PATCH",
-            f"/fleets/{self.id}",
-            data=data
+        self._check_id()
+
+        return self._save(
+            url=f"/fleets/{self.id}",
+            fields=fields,
+            exclude={'vehicle_type'}
         )
 
-    def refresh(self) -> None:
+    def update(self, persist: bool = False, **kwargs) -> None:
         """
-        Refresh the fleet model from the API.
-        """
-        api = self.api
-        self.__init__(**self.api.request("GET", f"/fleets/{self.id}"), api=api)
+        Update a field on the model, call save or keyword persist to persist changes in the API.
 
-    def delete(self) -> None:
+        Args:
+            persist (bool): whether to persist the changes to the API. Defaults to False.
+            **kwargs: the model fields to update.
+
+        Note: when doing multiple updates, it is recommended to call update() after all updates are made.
         """
-        Delete the fleet via the API.
-        """
-        self.api.request("DELETE", f"/fleets/{self.id}")
+        self._update(persist=persist, **kwargs)
 
     def get_parent(self) -> Optional['Fleet']:
         """

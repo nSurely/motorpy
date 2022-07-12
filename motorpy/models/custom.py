@@ -1,5 +1,5 @@
 from pydantic import BaseModel, Field
-from typing import Any
+from typing import Any, Optional, Set
 
 
 class CustomBaseModel(BaseModel):
@@ -31,6 +31,47 @@ class PrivateAPIHandler(CustomBaseModel):
     class Config:
         allow_populatiion_by_field_name = True
 
-    # def connect_api(self, api: api.APIHandler):
-    #     "Reset the API connection."
-    #     self.api = api
+    def _update(self, persist: bool = False, **kwargs) -> None:
+        """
+        Update a field on the model, call update to persist changes in the API.
+        This tracks what has changed and only updates the API if something has changed or is set.
+
+        Args:
+            persist (bool): whether to persist the changes to the API. Defaults to False.
+            **kwargs: the model fields to update.
+
+        Note: when doing multiple updates, it is recommended to call update() after all updates are made.
+        """
+        if not kwargs:
+            return
+        for key, value in kwargs.items():
+            object.__setattr__(self, key, value)
+            self.__fields_set__.add(key)
+        if persist:
+            self._save()
+
+    def _save(self, url: str, fields: dict = None, exclude: Set[str] = None, params: dict = None) -> Optional[dict]:
+        """
+        Update via the API.
+
+        Args:
+            fields (dict, optional): the API formatted fields to update. If not supplied, any set fields in the model will be updated in the API. Defaults to None.
+        """
+        if not self.api:
+            raise ValueError("APIHandler not set.")
+        if not exclude:
+            exclude = set()
+        data = self.dict(
+            by_alias=True,
+            exclude={'api', 'id', 'created_at'}.update(exclude),
+            skip_defaults=True,
+            exclude_unset=True
+        ) if not fields else fields
+        if not data:
+            return
+        return self.api.request(
+            "PATCH",
+            url,
+            data=data,
+            params=params
+        )
