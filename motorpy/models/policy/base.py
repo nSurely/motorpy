@@ -1,19 +1,25 @@
 from pydantic import BaseModel, Field, conint, conset
 from datetime import datetime
 from .enums.cover import PolicyCoverType
+from .enums.group import PolicyGroup
 
 
 class PolicyBase(BaseModel):
     "The base policy model. All other models should be nested in a seprate model that inherits this one."
     uid: str = Field(
-        default=...,
+        default=None,
         alias="id",
         description="The unique identifier for this policy"
     )
     created_at: datetime = Field(
-        default=...,
+        default=None,
         alias="createdAt",
         description="The date and time this policy record was created"
+    )
+    policy_group: PolicyGroup = Field(
+        default=None,
+        alias="policyGroup",
+        description="The policy group this policy belongs to"
     )
     is_active: bool = Field(
         default=True,

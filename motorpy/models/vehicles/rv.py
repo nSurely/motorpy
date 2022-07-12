@@ -1,5 +1,6 @@
+import motorpy.models as models
 from pydantic import Field
-from typing import Optional
+from typing import Optional, Generator
 from motorpy.models import PrivateAPIHandler
 from datetime import datetime
 from motorpy.models.risk import CommonRisk
@@ -182,3 +183,38 @@ class Vehicle(PrivateAPIHandler, CommonRisk):
     class Config:
         allow_population_by_field_name = True
         anystr_strip_whitespace = True
+
+    def list_policies(self, is_active_policy: bool = None) -> Generator['models.policies.Policy', None, None]:
+        """List policies for this vehicle.
+
+        Args:
+            is_active_policy (bool, optional): if True, will return only active policies. Defaults to None.
+
+        Returns:
+            Generator[Policy]: policies
+        """
+        params = {
+            "rvIds": self.id
+        }
+        if is_active_policy is not None:
+            params["isActivePolicy"] = is_active_policy
+
+        for p in self.api.batch_fetch(f"policy", params=params):
+            yield models.policies.Policy(api=self.api, **p)
+
+    def create_policy(self, policy: 'models.policies.Policy' = None) -> 'models.policies.Policy':
+        """Create a policy for this vehicle.
+
+        Args:
+            policy (Policy): policy to create. This can be left None and a new policy will be created using the org defaults.
+
+        Returns:
+            Policy: created policy
+        """
+        if policy is None:
+            policy = models.policies.Policy(api=self.api)
+        policy.policy_group = 'rv'
+        return policy.create(
+            api_handler=self.api,
+            record_id=self.id,
+        )

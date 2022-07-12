@@ -1,5 +1,6 @@
+import motorpy.models as models
 from pydantic import Field
-from typing import Optional
+from typing import Optional, Generator
 from motorpy.models import PrivateAPIHandler
 from datetime import datetime
 from motorpy.models.risk import CommonRisk
@@ -93,7 +94,44 @@ class DriverVehicle(PrivateAPIHandler, CommonRisk):
 
     class Config:
         anystr_strip_whitespace = True
-    
-    # def list_policies
+
+    def list_policies(self, loose_match: bool = True, is_active_policy: bool = None) -> Generator['models.policies.Policy', None, None]:
+        """List policies for this vehicle.
+
+        Args:
+            loose_match: If True, will match on the DRV ID and the vehicle ID.
+            is_active_policy (bool, optional): if True, will return only active policies. Defaults to None.
+
+        Returns:
+            Generator[Policy]: policies
+        """
+        params = {
+            "drvIds": self.id
+        }
+        if loose_match:
+            params["rvIds"] = self.vehicle.id
+        if is_active_policy is not None:
+            params["isActivePolicy"] = is_active_policy
+
+        for p in self.api.batch_fetch(f"policy", params=params):
+            yield models.policies.Policy(api=self.api, **p)
+
+    def create_policy(self, policy: 'models.policies.Policy' = None) -> 'models.policies.Policy':
+        """Create a policy for this driver.
+
+        Args:
+            policy (Policy): policy to create. This can be left None and a new policy will be created using the org defaults.
+
+        Returns:
+            Policy: created policy
+        """
+        if policy is None:
+            policy = models.policies.Policy(api=self.api)
+        policy.policy_group = 'drv'
+        return policy.create(
+            api_handler=self.api,
+            record_id=self.id,
+        )
+
 
 DriverVehicle.update_forward_refs()

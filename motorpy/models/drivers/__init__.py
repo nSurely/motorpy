@@ -1,5 +1,5 @@
 import motorpy.models as models
-from pydantic import Field, parse_obj_as
+from pydantic import Field
 from datetime import datetime, date
 from typing import Optional, List, Generator
 # from motorpy.models.billing import BillingAccount
@@ -304,14 +304,42 @@ class Driver(models.custom.PrivateAPIHandler, models.risk.CommonRisk):
                     "drvIds": vehicle_id
                 }) or [])]
 
-    def list_policies(self, loose_match: bool = True) -> Generator['models.policies.Policy', None, None]:
+    def list_policies(self, loose_match: bool = True, is_active_policy: bool = None) -> Generator['models.policies.Policy', None, None]:
         """List policies for this driver.
+
+        Args:
+            loose_match (bool, optional): if True, will return any policy related to the driver (D, DRV, RV, FD, FDRV). Defaults to True.
+            is_active_policy (bool, optional): if True, will return only active policies. Defaults to None.
 
         Returns:
             Generator[Policy]: policies
         """
-        for p in self.api.batch_fetch(f"policy", params={"driverIds": self.id, "driverLooseMatch": loose_match}):
+        params = {
+            "driverIds": self.id,
+            "driverLooseMatch": loose_match
+        }
+        if is_active_policy is not None:
+            params["isActivePolicy"] = is_active_policy
+
+        for p in self.api.batch_fetch(f"policy", params=params):
             yield models.policies.Policy(api=self.api, **p)
+    
+    def create_policy(self, policy: 'models.policies.Policy' = None) -> 'models.policies.Policy':
+        """Create a policy for this driver.
+
+        Args:
+            policy (Policy): policy to create. This can be left None and a new policy will be created using the org defaults.
+
+        Returns:
+            Policy: created policy
+        """
+        if policy is None:
+            policy = models.policies.Policy(api=self.api)
+        policy.policy_group = 'd'
+        return policy.create(
+            api_handler=self.api,
+            record_id=self.id,
+        )
 
 
 Driver.update_forward_refs()
