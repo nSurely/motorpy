@@ -1,15 +1,14 @@
-import motorpy.core as core
 import motorpy.models as models
-from motorpy.auth import Auth
+from motorpy.api import APIHandler
 from datetime import date
 from typing import Union, Generator
 import motorpy.search as search
 
 
-class Drivers(core.MotorBase):
+class Drivers:
 
-    def __init__(self, org_id: str, auth: Auth, region: str = None, url: str = None) -> None:
-        super().__init__(org_id, auth, region, url)
+    def __init__(self, api: APIHandler) -> None:
+        self.api = api
 
     def get_driver(self,
                    driver_id: str,

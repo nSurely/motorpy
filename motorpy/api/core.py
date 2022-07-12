@@ -5,7 +5,7 @@ import asyncio
 from motorpy.auth import Auth
 
 from .exceptions import APIError
-from typing import Generator, List, Optional, Coroutine, Tuple
+from typing import Generator, List, Optional, Tuple
 
 
 def _make_request(method: str, url: str,
@@ -69,6 +69,13 @@ class APIHandlerNoAuth:
 
         self.org_url = f"{self.url}/org/{self.org_id}"
 
+        # org data
+        # contains the public org data for the application behaviour
+        self.org_data: dict = None
+
+        # check this on recursion
+        self._org_data_refreshing = False
+
     def _loop_request(self,
                       method: str,
                       url: str,
@@ -93,12 +100,25 @@ class APIHandlerNoAuth:
                                                       timeout=self.timeout))
         return body, status
 
+    def refresh_org_data(self) -> None:
+        """Refresh the org data."""
+        try:
+            self._org_data_refreshing = True
+            self.org_data = self.request(
+                "GET",
+                endpoint=None,
+                url_override=f"public/{self.org_id}"
+            )
+        finally:
+            self._org_data_refreshing = False
+
     def request(self,
                 method: str,
                 endpoint: str,
                 params: dict = None,
                 data: dict = None,
-                headers: dict = None) -> Optional[dict]:
+                headers: dict = None,
+                url_override: str = None) -> Optional[dict]:
         """Make a request to the API.
 
         Args:
@@ -114,8 +134,11 @@ class APIHandlerNoAuth:
         Returns:
             Optional[dict]: response body if supplied.
         """
+        if self.org_data is None and not self._org_data_refreshing:
+            self.refresh_org_data()
+
         body, status = self._loop_request(
-            method, f"{self.org_url}/{endpoint}",
+            method, f"{self.org_url}/{endpoint}" if not url_override else url_override,
             params=params,
             data=data,
             headers=headers)

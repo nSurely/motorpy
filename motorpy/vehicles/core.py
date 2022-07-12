@@ -1,12 +1,11 @@
-import motorpy.core as core
-from motorpy.auth import Auth
+from motorpy.api import APIHandler
 from typing import Generator
 
 
-class Vehicles(core.MotorBase):
+class Vehicles:
 
-    def __init__(self, org_id: str, auth: Auth, region: str = None, url: str = None) -> None:
-        super().__init__(org_id, auth, region, url)
+    def __init__(self, api: APIHandler) -> None:
+        self.api = api
 
     def get_vehicle(self,
                     vehicle_id: str,
