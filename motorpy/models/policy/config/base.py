@@ -1,8 +1,9 @@
 from pydantic import BaseModel, Field
 from ..enums import ISOCurrencyCode
+from ..update import Mutable
 
 
-class PolicyConfigStandardBase(BaseModel):
+class PolicyConfigStandardBase(BaseModel, Mutable):
     display: str = Field(
         default=None,
         alias="display",

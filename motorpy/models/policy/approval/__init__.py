@@ -2,9 +2,10 @@ from pydantic import BaseModel, Field
 from datetime import datetime
 from typing import Optional
 from uuid import UUID
+from ..update import Mutable
 
 
-class PolicyApprovalBase(BaseModel):
+class PolicyApprovalBase(BaseModel, Mutable):
     approved_at: Optional[datetime] = Field(
         default=None,
         alias="approvedAt",

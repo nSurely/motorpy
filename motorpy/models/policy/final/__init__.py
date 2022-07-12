@@ -1,8 +1,9 @@
 from pydantic import BaseModel, Field, conint, confloat
 from typing import Optional
+from ..update import Mutable
 
 
-class PolicyFinalRates(BaseModel):
+class PolicyFinalRates(BaseModel, Mutable):
     final_rates_value: confloat(ge=0.0) = Field(
         default=0.0,
         alias="value",
@@ -46,7 +47,7 @@ In the case where variable base premium is off, this is the only value to be app
         allow_population_by_field_name = True
 
 
-class PolicyFinalPricingBase(BaseModel):
+class PolicyFinalPricingBase(BaseModel, Mutable):
     requires_reprice: bool = Field(
         default=False,
         alias="requiresReprice",

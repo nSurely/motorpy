@@ -1,8 +1,9 @@
 from pydantic import BaseModel, Field
+from ..update import Mutable
 from .components import *
 
 
-class PolicyExtrasNested(BaseModel):
+class PolicyExtrasNested(BaseModel, Mutable):
     extras_repairs: PolicyExtrasRepairs = Field(
         default=PolicyExtrasRepairs(),
         alias="repairs",

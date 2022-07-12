@@ -1,8 +1,9 @@
 from pydantic import BaseModel, Field
 from typing import Optional
+from ..update import Mutable
 
 
-class PolicyContributionBase(BaseModel):
+class PolicyContributionBase(BaseModel, Mutable):
     contribution_pc: float = Field(
         default=100.00,
         alias="pc",

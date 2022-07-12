@@ -1,9 +1,10 @@
 from pydantic import BaseModel, Field, conint
 from datetime import datetime, timedelta
 from typing import Optional
+from ..update import Mutable
 
 
-class PolicyDurationBase(BaseModel):
+class PolicyDurationBase(BaseModel,Mutable):
     start: datetime = Field(
         default_factory=lambda: datetime.utcnow(),
         alias="start",

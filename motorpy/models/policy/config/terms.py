@@ -1,10 +1,11 @@
 from pydantic import BaseModel, Field, HttpUrl
+from ..update import Mutable
 
 
 # * terms
 
 
-class PolicyTermsBase(BaseModel):
+class PolicyTermsBase(BaseModel, Mutable):
     terms_url: HttpUrl = Field(
         default=None,
         alias="url",

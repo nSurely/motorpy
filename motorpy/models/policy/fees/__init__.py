@@ -1,7 +1,8 @@
 from pydantic import BaseModel, Field, conint
+from ..update import Mutable
 
 
-class PolicyFeesBase(BaseModel):
+class PolicyFeesBase(BaseModel, Mutable):
     fees_cancellation: conint(ge=0) = Field(
         default=0,
         alias="cancellation",

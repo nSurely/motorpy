@@ -1,6 +1,7 @@
 from pydantic import BaseModel, Field, confloat
+from ..update import Mutable
 
-class PolicyNoClaimsBase(BaseModel):
+class PolicyNoClaimsBase(BaseModel, Mutable):
     no_claims_forgiveness: bool = Field(
         default=False,
         alias="forgiveness",

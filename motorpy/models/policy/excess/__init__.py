@@ -1,7 +1,8 @@
 from pydantic import BaseModel, Field, conint
+from ..update import Mutable
 
 
-class PolicyExcessBase(BaseModel):
+class PolicyExcessBase(BaseModel, Mutable):
     excess_voluntary: conint(ge=0) = Field(
         default=0,
         alias="voluntary",

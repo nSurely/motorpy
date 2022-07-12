@@ -1,7 +1,8 @@
 from pydantic import BaseModel, Field, confloat
+from ..update import Mutable
 
 
-class PolicyRewardsPremiumBase(BaseModel):
+class PolicyRewardsPremiumBase(BaseModel, Mutable):
     rewards_base_premium_active: bool = Field(
         default=False,
         alias="enabled",

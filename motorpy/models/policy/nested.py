@@ -164,18 +164,61 @@ class Policy(PolicyBase):
         """
         return self.final.final_base_premium.base_premium_value
 
+    def _check_id(self) -> None:
+        if not self.id:
+            raise ValueError("id must be set.")
+
     def refresh(self) -> None:
         """
-        Refresh the policy model from the API.
+        Refresh the model from the API.
         """
+        self._check_id()
         api = self.api
-        self.__init__(**self.api.request("GET", f"/policy/{self.id}"), api=api)
+        self.__init__(
+            **self.api.request("GET",
+                               f"/policy/{self.id}"),
+            api=api
+        )
 
     def delete(self) -> None:
         """
-        Delete the policy via the API.
+        Delete this record via the API.
         """
-        self.api.request("DELETE", f"/policy/{self.id}")
+        self._check_id()
+        self.api.request(
+            "DELETE",
+            f"/policy/{self.id}"
+        )
+
+    def save(self, fields: dict = None) -> Optional[dict]:
+        """
+        Persist any changes in the API.
+
+        Args:
+            fields (dict, optional): the API formatted fields to update. If not supplied, any set fields in the model will be updated in the API. Defaults to None.
+        """
+        self._check_id()
+
+        return self._save(
+            url=f"/policy/{self.id}",
+            fields=fields,
+            exclude=None
+        )
+
+    def update(self, persist: bool = False, **kwargs) -> None:
+        """
+        Update a field on the model, call save or keyword persist to persist changes in the API.
+
+        When updating nested fields, you must call update on the nested object.
+        Call save here when done updating a nested object.
+
+        Args:
+            persist (bool): whether to persist the changes to the API. Defaults to False.
+            **kwargs: the model fields to update.
+
+        Note: when doing multiple updates, it is recommended to call update() after all updates are made.
+        """
+        self._update(persist=persist, **kwargs)
 
     def create(self,
                api_handler,

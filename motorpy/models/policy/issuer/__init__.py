@@ -2,9 +2,10 @@ from pydantic import BaseModel, Field
 from datetime import datetime
 from typing import Optional
 from uuid import UUID
+from ..update import Mutable
 
 
-class PolicyIssuerBase(BaseModel):
+class PolicyIssuerBase(BaseModel, Mutable):
     issuer_id: Optional[UUID] = Field(
         default=None,
         alias="id",

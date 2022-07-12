@@ -1,8 +1,9 @@
 from pydantic import BaseModel, Field, confloat, conint
 from ..enums import PaymentFrequency
+from ..update import Mutable
 
 
-class PolicyRatesBase(BaseModel):
+class PolicyRatesBase(BaseModel, Mutable):
     rates_active: bool = Field(
         default=False,
         alias="enabled",

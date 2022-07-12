@@ -1,9 +1,10 @@
 from pydantic import BaseModel, Field, conint
+from ..update import Mutable
 
 # * extras - repairs
 
 
-class PolicyExtrasRepairsBase(BaseModel):
+class PolicyExtrasRepairsBase(BaseModel, Mutable):
     extras_repairs_enforce_approved_suppliers: bool = Field(
         default=False,
         alias="enforceApprovedSuppliers",
@@ -27,7 +28,7 @@ class PolicyExtrasRepairs(PolicyExtrasRepairsBase):
 # * extras - alarm
 
 
-class PolicyExtrasAlarmBase(BaseModel):
+class PolicyExtrasAlarmBase(BaseModel, Mutable):
     extras_alarm_enforce: bool = Field(
         default=False,
         alias="enforce",
@@ -45,7 +46,7 @@ class PolicyExtrasAlarm(PolicyExtrasAlarmBase):
 # * extras - breakdown
 
 
-class PolicyExtrasBreakdownBase(BaseModel):
+class PolicyExtrasBreakdownBase(BaseModel, Mutable):
     extras_breakdown_cover: bool = Field(
         default=False,
         alias="cover",
@@ -75,7 +76,7 @@ class PolicyExtrasBreakdown(PolicyExtrasBreakdownBase):
 # * extras - rescue
 
 
-class PolicyExtrasRescueBase(BaseModel):
+class PolicyExtrasRescueBase(BaseModel, Mutable):
     extras_rescue_cover: bool = Field(
         default=False,
         alias="cover",
@@ -105,7 +106,7 @@ class PolicyExtrasRescue(PolicyExtrasRescueBase):
 # * extras - theft
 
 
-class PolicyExtrasTheftBase(BaseModel):
+class PolicyExtrasTheftBase(BaseModel, Mutable):
     extras_theft_cover: bool = Field(
         default=False,
         alias="cover",
@@ -135,7 +136,7 @@ class PolicyExtrasTheft(PolicyExtrasTheftBase):
 # * extras - key_recovery
 
 
-class PolicyExtrasKeyRecoveryBase(BaseModel):
+class PolicyExtrasKeyRecoveryBase(BaseModel, Mutable):
     extras_key_cover: bool = Field(
         default=False,
         alias="cover",
@@ -165,7 +166,7 @@ class PolicyExtrasKeyRecovery(PolicyExtrasKeyRecoveryBase):
 # * extras - windscreen
 
 
-class PolicyExtrasWindscreenBase(BaseModel):
+class PolicyExtrasWindscreenBase(BaseModel, Mutable):
     extras_windscreen_cover: bool = Field(
         default=False,
         alias="cover",

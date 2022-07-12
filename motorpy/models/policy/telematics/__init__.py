@@ -1,9 +1,9 @@
 from pydantic import BaseModel, Field, conint, root_validator
-from ..enums import PolicyTelematicsProcess
+from ..update import Mutable
 from typing import Optional
 
 
-class PolicyTelematicsBase(BaseModel):
+class PolicyTelematicsBase(BaseModel, Mutable):
     telematics_policy_process: str = Field(
         default="indefinite",
         alias="process",

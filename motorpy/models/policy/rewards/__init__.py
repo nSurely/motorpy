@@ -1,9 +1,10 @@
 from pydantic import BaseModel, Field, conint
 from .premium import PolicyRewardsPremiumBase
 from .rates import PolicyRewardsRatesBase
+from ..update import Mutable
 
 
-class PolicyRewardsBase(BaseModel):
+class PolicyRewardsBase(BaseModel, Mutable):
     rewards_active: bool = Field(
         default=False,
         alias="enabled",

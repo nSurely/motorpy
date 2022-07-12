@@ -1,10 +1,11 @@
 from pydantic import BaseModel, Field
 from datetime import date
 from typing import Optional
+from ..update import Mutable
 
 
 
-class PolicyDriverBase(BaseModel):
+class PolicyDriverBase(BaseModel, Mutable):
     # -- * driver
     # -- * esignature
     driver_esignature: Optional[str] = Field(

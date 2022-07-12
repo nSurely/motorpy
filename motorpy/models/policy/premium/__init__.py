@@ -2,9 +2,10 @@ from pydantic import BaseModel, Field, conint
 from ..enums import PaymentFrequency
 from datetime import date
 from typing import Optional
+from ..update import Mutable
 
 
-class PolicyBasePremiumBase(BaseModel):
+class PolicyBasePremiumBase(BaseModel, Mutable):
     base_premium_value: conint(ge=0) = Field(
         default=0,
         alias="value",

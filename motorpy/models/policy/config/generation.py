@@ -1,9 +1,10 @@
 from pydantic import BaseModel, Field
+from ..update import Mutable
 
 # * generation
 
 
-class PolicyGenerationBase(BaseModel):
+class PolicyGenerationBase(BaseModel, Mutable):
     generation_max_passengers_inherit_vehicle: bool = Field(
         default=False,
         alias="maxPassengersInheritVehicle",

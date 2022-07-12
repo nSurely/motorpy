@@ -1,6 +1,7 @@
 import enum
 from pydantic import BaseModel, Field, validator
 from typing import List, Tuple, Optional
+from ..update import Mutable
 
 # * geofence
 
@@ -35,7 +36,7 @@ class GeofencePolygon(BaseModel):
         return v
 
 
-class PolicyGeofenceBase(BaseModel):
+class PolicyGeofenceBase(BaseModel, Mutable):
     geofence_active: bool = Field(
         default=False,
         alias="enabled",
