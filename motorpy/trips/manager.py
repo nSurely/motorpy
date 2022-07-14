@@ -1,10 +1,9 @@
-import core
 import time
 from api import APIHandler
 from typing import List
 
 
-class TripManager(core.MotorBase):
+class TripManager:
     """
     TripManager handles the batching and sending of telematics data. One trip manager should be used per trip.
 
