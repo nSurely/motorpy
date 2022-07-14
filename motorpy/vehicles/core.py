@@ -1,3 +1,4 @@
+import motorpy.models as models
 from motorpy.api import APIHandler
 from typing import Generator
 
@@ -31,12 +32,13 @@ class Vehicles:
 
         return self.api.request("GET", f"registered-vehicles/{vehicle_id}", params=params)
 
-    def search_vehicles(self,
-                        reg_plate: str = None,
-                        vin: str = None,
-                        is_active: bool = None,
-                        is_approved: bool = None,
-                        full_response: bool = True) -> Generator[dict, None, None]:
+    def list_vehicles(self,
+                      reg_plate: str = None,
+                      vin: str = None,
+                      is_active: bool = None,
+                      is_approved: bool = None,
+                      full_response: bool = True,
+                      max_records: int = None) -> Generator[dict, None, None]:
         """Search for registered vehicles.
 
         Args:
@@ -62,4 +64,11 @@ class Vehicles:
 
         params['full'] = 't' if full_response else 'f'
 
-        yield from self.api.batch_fetch("registered-vehicles", params=params)
+        count = 0
+        for vehicle in self.api.batch_fetch("registered-vehicles", params=params):
+            if max_records is not None:
+                if count >= max_records:
+                    break
+            model: models.Vehicle = models.Vehicle(**vehicle, api=self.api)
+            yield model
+            count += 1

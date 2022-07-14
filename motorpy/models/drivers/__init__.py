@@ -293,7 +293,7 @@ class Driver(models.custom.PrivateAPIHandler, models.risk.CommonRisk):
         self.fleet_raw = [f.to_dict(by_alias=True) for f in fleets]
 
     # policies
-    def vehicle_policies(self, vehicle_id: str) -> List['models.policies.Policy']:
+    def vehicle_policies(self, vehicle_id: str) -> List['models.policy.Policy']:
         """List policies for this driver.
 
         Returns:
@@ -304,7 +304,7 @@ class Driver(models.custom.PrivateAPIHandler, models.risk.CommonRisk):
                     "drvIds": vehicle_id
                 }) or [])]
 
-    def list_policies(self, loose_match: bool = True, is_active_policy: bool = None) -> Generator['models.policies.Policy', None, None]:
+    def list_policies(self, loose_match: bool = True, is_active_policy: bool = None) -> Generator['models.policy.Policy', None, None]:
         """List policies for this driver.
 
         Args:
@@ -322,9 +322,9 @@ class Driver(models.custom.PrivateAPIHandler, models.risk.CommonRisk):
             params["isActivePolicy"] = is_active_policy
 
         for p in self.api.batch_fetch(f"policy", params=params):
-            yield models.policies.Policy(api=self.api, **p)
+            yield models.policy.Policy(api=self.api, **p)
 
-    def create_policy(self, policy: 'models.policies.Policy' = None) -> 'models.policies.Policy':
+    def create_policy(self, policy: 'models.policy.Policy' = None) -> 'models.policy.Policy':
         """Create a policy for this driver.
 
         Args:
@@ -334,7 +334,7 @@ class Driver(models.custom.PrivateAPIHandler, models.risk.CommonRisk):
             Policy: created policy
         """
         if policy is None:
-            policy = models.policies.Policy(api=self.api)
+            policy = models.policy.Policy(api=self.api)
         policy.policy_group = 'd'
         return policy.create(
             api_handler=self.api,

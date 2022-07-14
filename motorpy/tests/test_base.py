@@ -23,5 +23,5 @@ class TestMotor:
         # assert inherited methods are present
         # for sanity check
         assert hasattr(motor, 'get_vehicle')
-        assert hasattr(motor, 'search_vehicles')
+        assert hasattr(motor, 'list_vehicles')
         assert hasattr(motor, 'get_driver')
