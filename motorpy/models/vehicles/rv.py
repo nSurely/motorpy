@@ -183,6 +183,16 @@ class Vehicle(PrivateAPIHandler, CommonRisk):
     class Config:
         allow_population_by_field_name = True
         anystr_strip_whitespace = True
+    
+    @property
+    def telematics_id(self) -> str:
+        """
+        Return the telematics ID.
+
+        Returns:
+            str: telematics ID
+        """
+        return self.source_id
 
     def list_policies(self, is_active_policy: bool = None) -> Generator['models.policies.Policy', None, None]:
         """List policies for this vehicle.

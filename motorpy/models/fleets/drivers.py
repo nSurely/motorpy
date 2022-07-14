@@ -5,6 +5,7 @@ from datetime import datetime
 
 
 class FleetDriver(models.PrivateAPIHandler):
+    "Represents a driver who is assigned to a fleet"
     is_vehicle_manager: bool = Field(
         default=False,
         alias="isVehicleManager"

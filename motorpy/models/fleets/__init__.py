@@ -6,6 +6,7 @@ from datetime import datetime
 from motorpy.models.constants import LANG
 from .drivers import FleetDriver
 from .vehicles import FleetVehicle
+from .assigned import FleetDriverVehicleAssignment
 
 
 class Fleet(models.PrivateAPIHandler):

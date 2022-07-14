@@ -100,6 +100,16 @@ class DriverVehicle(PrivateAPIHandler, CommonRisk):
     class Config:
         anystr_strip_whitespace = True
 
+    @property
+    def telematics_id(self) -> str:
+        """
+        Return the telematics ID.
+
+        Returns:
+            str: telematics ID
+        """
+        return self.source_id
+
     def list_policies(self, loose_match: bool = True, is_active_policy: bool = None) -> Generator['models.policies.Policy', None, None]:
         """List policies for this vehicle.
 
@@ -180,7 +190,7 @@ class DriverVehicle(PrivateAPIHandler, CommonRisk):
             fields=fields,
             exclude={'driver_id', 'vehicle'}
         )
-    
+
     def update(self, persist: bool = False, **kwargs) -> None:
         """
         Update a field on the model, call save or keyword persist to persist changes in the API.

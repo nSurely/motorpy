@@ -195,6 +195,16 @@ class Driver(models.custom.PrivateAPIHandler, models.risk.CommonRisk):
         """Check that the driver has an ID."""
         if not self.id:
             raise ValueError("Driver id is required")
+    
+    @property
+    def telematics_id(self) -> str:
+        """
+        Return the telematics ID.
+
+        Returns:
+            str: telematics ID
+        """
+        return self.source_id
 
     @property
     def full_name(self) -> str:
@@ -394,11 +404,14 @@ class Driver(models.custom.PrivateAPIHandler, models.risk.CommonRisk):
         """
         self._update(persist=persist, **kwargs)
 
-    def list_trackable_models(self) -> List['models.assets.DriverVehicle']:
+    def list_trackable_models(self) -> List['models.TrackableAsset']:
         """List trackable models for this driver.
 
+        Depending on the org settings, this will return a model that contains a source ID.
+        The source ID (not the ID) will be used to identify the model for telematics.
+
         Returns:
-            List[Asset]: assets
+            List[TrackableAsset]: assets that can be tracked for different insurance use-cases.
         """
         if not self.api.org_data:
             self.api.refresh_org_data()
@@ -411,6 +424,18 @@ class Driver(models.custom.PrivateAPIHandler, models.risk.CommonRisk):
         # todo: implement fleet logic
 
         return []
+    
+    @property
+    def tracking_id(self) -> Optional[str]:
+        """Get the tracking ID for this driver.
+
+        Returns:
+            str: tracking ID
+        """
+        assets = self.list_trackable_models()
+        if not assets:
+            return None
+        return assets[0].source_id
 
 
 
