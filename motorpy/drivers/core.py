@@ -6,6 +6,9 @@ import motorpy.search as search
 
 
 class Drivers:
+    """
+    Org level operations on groups of Drivers.
+    """
 
     def __init__(self, api: APIHandler) -> None:
         self.api = api
