@@ -1,7 +1,7 @@
 import motorpy.models as models
-from pydantic import Field
+from pydantic import Field, validator, parse_raw_as, parse_obj_as
 from datetime import datetime, date
-from typing import Optional, List, Generator
+from typing import Optional, List, Generator, Any
 
 
 class Driver(models.custom.PrivateAPIHandler, models.risk.CommonRisk):
@@ -15,10 +15,12 @@ class Driver(models.custom.PrivateAPIHandler, models.risk.CommonRisk):
         description="The driver's unique ID.",
     )
     source_id: Optional[str] = Field(
-        default=None
+        default=None,
+        alias="sourceId"
     )
     external_id: Optional[str] = Field(
-        default=None
+        default=None,
+        alias="externalId"
     )
 
     # personal
@@ -166,11 +168,32 @@ class Driver(models.custom.PrivateAPIHandler, models.risk.CommonRisk):
         alias="createdAt"
     )
 
-    # implementing fleets using a property to avoid circular imports
-    fleet_raw: List[dict] = Field(
-        default=[],
+    # circular reference
+    # see validator for more info
+    fleets: List[Any] = Field(
+        default_factory=list,
         alias="fleets"
     )
+
+    @validator('fleets')
+    def set_fleets(cls, value: List[Any]) -> List[Any]:
+        """Set the fleets for this driver.
+
+        Args:
+            value (List[Any]): fleets
+        """
+        if not value:
+            return []
+        # parse json if applicable
+        # cast to FleetDriver models
+        if isinstance(value, (str, bytes)):
+            value = parse_raw_as(List[models.fleets.FleetDriver], value)
+        elif isinstance(value, list):
+            value = parse_obj_as(List[models.fleets.FleetDriver], value)
+        for f in value:
+            f.driver = cls
+            f.api = cls.api
+        return value
 
     vehicles_raw: List[dict] = Field(
         default=[]
@@ -301,24 +324,14 @@ class Driver(models.custom.PrivateAPIHandler, models.risk.CommonRisk):
 
     def list_fleets(self) -> List['models.fleets.Fleet']:
         "List fleets for this driver."
-        self.refresh()
-        return self.fleets
-
-    @property
-    def fleets(self) -> List['models.fleets.Fleet']:
-        """List fleets for this driver. Use list_fleets to refresh data and return.
-
-        Returns:
-            List[Fleet]: fleets
-        """
-        if not self.fleet_raw:
-            return []
-        return [models.fleets.Fleet(api=self.api, **f) for f in (self.fleet_raw or [])]
-
-    @fleets.setter
-    def fleets(self, fleets: List['models.fleets.Fleet']) -> None:
-        """Set the fleets for this driver. This will call the API foreach fleet to get all fields unless specified otherwise."""
-        self.fleet_raw = [f.to_dict(by_alias=True) for f in fleets]
+        if not self.fleets:
+            self.refresh()
+        fleets = []
+        for fd in self.fleets:
+            f = fd.get_fleet()
+            if f:
+                fleets.append(f)
+        return fleets
 
     # policies
     def vehicle_policies(self, vehicle_id: str) -> List['models.policy.Policy']:
@@ -417,7 +430,7 @@ class Driver(models.custom.PrivateAPIHandler, models.risk.CommonRisk):
         return self._save(
             url=f"/drivers/{self.id}",
             fields=fields,
-            exclude={'fleet_raw', 'vehicles_raw', 'created_at'}
+            exclude={'fleets', 'vehicles_raw', 'created_at'}
         )
 
     def update(self, persist: bool = False, **kwargs) -> None:

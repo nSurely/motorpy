@@ -6,6 +6,10 @@ from datetime import datetime
 
 class FleetVehicle(models.PrivateAPIHandler):
     "Represents a vehicle that is assigned to a fleet"
+    source_id: Optional[str] = Field(
+        default=None,
+        alias="sourceId"
+    )
     expires_at: Optional[datetime] = Field(
         default=None,
         alias="expiresAt"
