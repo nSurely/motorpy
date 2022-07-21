@@ -63,8 +63,8 @@ class PrivateAPIHandler(CustomBaseModel):
             exclude = set()
         data = self.dict(
             by_alias=True,
-            exclude={'api', 'id', 'created_at'}.update(exclude),
-            skip_defaults=True,
+            exclude={'api', 'id', 'created_at'}.union(exclude),
+            exclude_defaults=True,
             exclude_unset=True
         ) if not fields else fields
         if not data:
