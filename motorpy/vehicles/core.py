@@ -8,7 +8,7 @@ class Vehicles:
     def __init__(self, api: APIHandler) -> None:
         self.api = api
 
-    def get_vehicle(self,
+    async def get_vehicle(self,
                     vehicle_id: str,
                     include_translations: bool = True,
                     include_distance: bool = False,
@@ -30,9 +30,9 @@ class Vehicles:
         params['distance3m'] = 't' if include_distance else 'f'
         params['totalDrvCount'] = 't' if include_drv_count else 'f'
 
-        return self.api.request("GET", f"registered-vehicles/{vehicle_id}", params=params)
+        return await self.api.request("GET", f"registered-vehicles/{vehicle_id}", params=params)
 
-    def list_vehicles(self,
+    async def list_vehicles(self,
                       reg_plate: str = None,
                       vin: str = None,
                       is_active: bool = None,
@@ -65,7 +65,7 @@ class Vehicles:
         params['full'] = 't' if full_response else 'f'
 
         count = 0
-        for vehicle in self.api.batch_fetch("registered-vehicles", params=params):
+        async for vehicle in self.api.batch_fetch("registered-vehicles", params=params):
             if max_records is not None:
                 if count >= max_records:
                     break

@@ -1,4 +1,4 @@
-import requests
+import aiohttp
 import time
 from .abc import JWTAuthBase
 from typing import List, Dict
@@ -18,6 +18,8 @@ class JWTAuth(JWTAuthBase):
         self.auth_type = auth_type
         self.email = email
         self.password = password
+
+        self.session = aiohttp.ClientSession()
 
         self.token_type: str = None
         self.access_token: str = None
@@ -85,7 +87,7 @@ class JWTAuth(JWTAuthBase):
             return True
         return False
 
-    def login(self, email: str, password: str) -> str:
+    async def login(self, email: str, password: str) -> str:
         """Login to the API
 
         Args:
@@ -95,9 +97,9 @@ class JWTAuth(JWTAuthBase):
         Returns:
             str: the access token
         """
-        token_vals = requests.request("POST",
-                                      self.login_url,
-                                      data={"email": email, "password": password})
+        token_vals = await self.session.request("POST",
+                                                self.login_url,
+                                                data={"email": email, "password": password}).json()
         self.token_type = token_vals["tokenType"]
         self.access_token = token_vals["accessToken"]
         self.expires_in = token_vals["expiresIn"]
@@ -112,15 +114,15 @@ class JWTAuth(JWTAuthBase):
         self.last_refresh_time = time.time()
         return self.access_token
 
-    def logout(self) -> bool:
+    async def logout(self) -> bool:
         """Logout of the API
 
         Returns:
             bool: True if successful, False otherwise.
         """
         if self.is_logged_in():
-            requests.post(self.logout_url,
-                          data={"refreshToken": self.refresh_token})
+            await self.session.post(self.logout_url,
+                                    data={"refreshToken": self.refresh_token})
             self.access_token = None
             self.expires_in = None
             self.refresh_token = None
@@ -129,7 +131,7 @@ class JWTAuth(JWTAuthBase):
             return True
         return False
 
-    def refresh(self) -> None:
+    async def refresh(self) -> None:
         """Refresh the access token
 
         Raises:
@@ -138,9 +140,9 @@ class JWTAuth(JWTAuthBase):
         if not self.is_logged_in():
             raise ValueError("Not logged in.")
 
-        res = requests.post(self.refresh_url,
-                            data={"refreshToken": self.refresh_token})
-        token_vals = res.json()
+        res = await self.session.post(self.refresh_url,
+                                      data={"refreshToken": self.refresh_token})
+        token_vals = await res.json()
         self.token_type = token_vals["tokenType"]
         self.access_token = token_vals["accessToken"]
         self.expires_in = token_vals["expiresIn"]

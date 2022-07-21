@@ -13,18 +13,18 @@ class Drivers:
     def __init__(self, api: APIHandler) -> None:
         self.api = api
 
-    def get_driver(self,
-                   driver_id: str,
-                   risk: bool = True,
-                   address: bool = True,
-                   fleets: bool = True,
-                   vehicle_count: bool = False,
-                   distance: bool = False,
-                   points: bool = True,
-                   files: bool = True,
-                   contact: bool = True,
-                   occupation: bool = True,
-                   **query) -> models.Driver:
+    async def get_driver(self,
+                         driver_id: str,
+                         risk: bool = True,
+                         address: bool = True,
+                         fleets: bool = True,
+                         vehicle_count: bool = False,
+                         distance: bool = False,
+                         points: bool = True,
+                         files: bool = True,
+                         contact: bool = True,
+                         occupation: bool = True,
+                         **query) -> models.Driver:
         """Get a driver record.
 
         Args:
@@ -56,7 +56,7 @@ class Drivers:
             'occupation': occupation
         }
 
-        driver_raw = self.api.request(
+        driver_raw = await self.api.request(
             "GET", f"drivers/{driver_id}", params=params
         )
 
@@ -66,32 +66,32 @@ class Drivers:
 
         return model
 
-    def list_drivers(self,
-                     dob: Union[date, search.Search] = None,
-                     email: Union[str, search.Search] = None,
-                     first_name: Union[str, search.Search] = None,
-                     last_name: Union[str, search.Search] = None,
-                     external_id: Union[str, search.Search] = None,
-                     is_active: bool = None,
-                     max_records: int = None) -> Generator[models.Driver, None, None]:
+    async def list_drivers(self,
+                           dob: Union[date, search.Search] = None,
+                           email: Union[str, search.Search] = None,
+                           first_name: Union[str, search.Search] = None,
+                           last_name: Union[str, search.Search] = None,
+                           external_id: Union[str, search.Search] = None,
+                           is_active: bool = None,
+                           max_records: int = None) -> Generator[models.Driver, None, None]:
         params = {}
 
         if dob is not None:
-            params['dob'] = dob
+            params['dob'] = str(dob)
         if email is not None:
-            params['email'] = email
+            params['email'] = str(email)
         if first_name is not None:
-            params['firstName'] = first_name
+            params['firstName'] = str(first_name)
         if last_name is not None:
-            params['lastName'] = last_name
+            params['lastName'] = str(last_name)
         if external_id is not None:
-            params['externalId'] = external_id
+            params['externalId'] = str(external_id)
         if is_active is not None:
-            params['isActive'] = is_active
+            params['isActive'] = 't' if is_active else 'f'
 
         count = 0
-        for driver in self.api.batch_fetch("drivers",
-                                            params=params):
+        async for driver in self.api.batch_fetch("drivers",
+                                                 params=params):
             if max_records is not None:
                 if count >= max_records:
                     break

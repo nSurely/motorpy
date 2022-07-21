@@ -82,15 +82,15 @@ class Auth(AuthBase):
     def requires_refresh(self) -> bool:
         return self.auth_obj.requires_refresh()
 
-    def refresh(self) -> None:
-        self.auth_obj.refresh()
+    async def refresh(self) -> None:
+        await self.auth_obj.refresh()
 
-    def login(self) -> bool:
+    async def login(self) -> bool:
         if self.auth_method == AuthType.API_KEY:
             return True
         return self.auth_obj.login()
 
-    def logout(self) -> bool:
+    async def logout(self) -> bool:
         if self.auth_method == AuthType.API_KEY:
             return True
         return self.auth_obj.logout()
@@ -104,7 +104,7 @@ class Auth(AuthBase):
     def is_logged_in(self) -> bool:
         return self.auth_obj.is_logged_in()
 
-    def signup(self,
+    async def signup(self,
                email: str,
                password: str,
                first_name: str,
@@ -126,7 +126,7 @@ class Auth(AuthBase):
         """
         if self.auth_method == AuthType.API_KEY:
             return None
-        return self.auth_obj.signup(
+        return await self.auth_obj.signup(
             email=email,
             password=password,
             first_name=first_name,

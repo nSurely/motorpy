@@ -199,14 +199,14 @@ class Driver(models.custom.PrivateAPIHandler, models.risk.CommonRisk):
         default=[]
     )
 
-    def list_vehicles(self) -> List[models.vehicles.DriverVehicle]:
+    async def list_vehicles(self) -> List[models.vehicles.DriverVehicle]:
         """List all vehicles for this driver.
 
         Returns:
             List[Vehicle]: list of vehicles
         """
-        self.vehicles_raw = self.api.request("GET",
-                                             f"drivers/{self.id}/vehicles")
+        self.vehicles_raw = await self.api.request("GET",
+                                                   f"drivers/{self.id}/vehicles")
         return [models.vehicles.DriverVehicle(api=self.api, **v) for v in self.vehicles_raw]
 
     @property
@@ -255,7 +255,7 @@ class Driver(models.custom.PrivateAPIHandler, models.risk.CommonRisk):
 
     # billing
 
-    def list_billing_accounts(self, primary_only: bool = False) -> List[models.billing.BillingAccount]:
+    async def list_billing_accounts(self, primary_only: bool = False) -> List[models.billing.BillingAccount]:
         """List billing accounts for this driver.
 
         Args:
@@ -265,7 +265,7 @@ class Driver(models.custom.PrivateAPIHandler, models.risk.CommonRisk):
             List[BillingAccount]: billing accounts
         """
         self._check_id()
-        accounts = self.api.request(
+        accounts = await self.api.request(
             "GET",
             f"/drivers/{self.id}/billing-accounts/",
             params={
@@ -274,16 +274,8 @@ class Driver(models.custom.PrivateAPIHandler, models.risk.CommonRisk):
         )
         return [models.billing.BillingAccount(api=self.api, **ba) for ba in (accounts or [])]
 
-    @property
-    def billing_accounts(self) -> List[models.billing.BillingAccount]:
-        """List billing accounts for this driver.
 
-        Returns:
-            List[BillingAccount]: billing accounts
-        """
-        return self.list_billing_accounts()
-
-    def get_billing_account(self, id: str) -> models.billing.BillingAccount:
+    async def get_billing_account(self, id: str) -> models.billing.BillingAccount:
         """Get a billing account for this driver.
 
         Args:
@@ -295,57 +287,48 @@ class Driver(models.custom.PrivateAPIHandler, models.risk.CommonRisk):
         self._check_id()
         if not id:
             raise ValueError("Billing account id is required")
-        return models.billing.BillingAccount(api=self.api, **self.api.request(
+        return models.billing.BillingAccount(api=self.api, **(await self.api.request(
             "GET",
             f"/drivers/{self.id}/billing-accounts/{id}"
-        ))
+        )))
 
-    def get_primary_billing_account(self) -> Optional[models.billing.BillingAccount]:
+    async def get_primary_billing_account(self) -> Optional[models.billing.BillingAccount]:
         """Find the primary billing account for this driver.
 
         Returns:
             Optional[BillingAccount]: primary billing account
         """
-        res: List[models.billing.BillingAccount] = self.list_billing_accounts(
+        res: List[models.billing.BillingAccount] = await self.list_billing_accounts(
             primary_only=True)
         # make another request for the full account details
-        return self.get_billing_account(res[0].id) if res else None
-
-    @property
-    def primary_billing_account(self) -> Optional[models.billing.BillingAccount]:
-        """Find the primary billing account for this driver.
-
-        Returns:
-            Optional[BillingAccount]: primary billing account
-        """
-        return self.get_primary_billing_account()
+        return await self.get_billing_account(res[0].id) if res else None
 
     # fleets
 
-    def list_fleets(self) -> List['models.fleets.Fleet']:
+    async def list_fleets(self) -> List['models.fleets.Fleet']:
         "List fleets for this driver."
         if not self.fleets:
-            self.refresh()
+            await self.refresh()
         fleets = []
         for fd in self.fleets:
-            f = fd.get_fleet()
+            f = await fd.get_fleet()
             if f:
                 fleets.append(f)
         return fleets
 
     # policies
-    def vehicle_policies(self, vehicle_id: str) -> List['models.policy.Policy']:
+    async def vehicle_policies(self, vehicle_id: str) -> List['models.policy.Policy']:
         """List policies for this driver.
 
         Returns:
             List[Policy]: policies
         """
-        return [models.policies.Policy(api=self.api, **p) for p in (self.api.request(
+        return [models.policies.Policy(api=self.api, **p) for p in (await self.api.request(
                 "GET", f"policy", params={
                     "drvIds": vehicle_id
                 }) or [])]
 
-    def list_policies(self, loose_match: bool = True, is_active_policy: bool = None) -> Generator['models.policy.Policy', None, None]:
+    async def list_policies(self, loose_match: bool = True, is_active_policy: bool = None) -> Generator['models.policy.Policy', None, None]:
         """List policies for this driver.
 
         Args:
@@ -362,10 +345,10 @@ class Driver(models.custom.PrivateAPIHandler, models.risk.CommonRisk):
         if is_active_policy is not None:
             params["isActivePolicy"] = is_active_policy
 
-        for p in self.api.batch_fetch(f"policy", params=params):
+        async for p in self.api.batch_fetch(f"policy", params=params):
             yield models.policy.Policy(api=self.api, **p)
 
-    def create_policy(self, policy: 'models.policy.Policy' = None) -> 'models.policy.Policy':
+    async def create_policy(self, policy: 'models.policy.Policy' = None) -> 'models.policy.Policy':
         """Create a policy for this driver.
 
         Args:
@@ -377,7 +360,7 @@ class Driver(models.custom.PrivateAPIHandler, models.risk.CommonRisk):
         if policy is None:
             policy = models.policy.Policy(api=self.api)
         policy.policy_group = 'd'
-        return policy.create(
+        return await policy.create(
             api_handler=self.api,
             record_id=self.id,
         )
@@ -386,14 +369,14 @@ class Driver(models.custom.PrivateAPIHandler, models.risk.CommonRisk):
         if not self.id:
             raise ValueError("id must be set.")
 
-    def refresh(self) -> None:
+    async def refresh(self) -> None:
         """
         Refresh the model from the API.
         """
         self._check_id()
         api = self.api
         self.__init__(
-            **self.api.request("GET",
+            **(await self.api.request("GET",
                                f"/drivers/{self.id}",
                                params={
                                    "risk": True,
@@ -404,21 +387,21 @@ class Driver(models.custom.PrivateAPIHandler, models.risk.CommonRisk):
                                    "occupation": True,
                                    "points": True,
                                    "policies": True
-                               }),
+                               })),
             api=api
         )
 
-    def delete(self) -> None:
+    async def delete(self) -> None:
         """
         Delete this record via the API.
         """
         self._check_id()
-        self.api.request(
+        await self.api.request(
             "DELETE",
             f"/drivers/{self.id}"
         )
 
-    def save(self, fields: dict = None) -> Optional[dict]:
+    async def save(self, fields: dict = None) -> Optional[dict]:
         """
         Persist any changes in the API.
 
@@ -427,13 +410,13 @@ class Driver(models.custom.PrivateAPIHandler, models.risk.CommonRisk):
         """
         self._check_id()
 
-        return self._save(
+        return await self._save(
             url=f"/drivers/{self.id}",
             fields=fields,
             exclude={'fleets', 'vehicles_raw', 'created_at'}
         )
 
-    def update(self, persist: bool = False, **kwargs) -> None:
+    async def update(self, persist: bool = False, **kwargs) -> None:
         """
         Update a field on the model, call save or keyword persist to persist changes in the API.
 
@@ -443,9 +426,9 @@ class Driver(models.custom.PrivateAPIHandler, models.risk.CommonRisk):
 
         Note: when doing multiple updates, it is recommended to call update() after all updates are made.
         """
-        self._update(persist=persist, **kwargs)
+        await self._update(persist=persist, **kwargs)
 
-    def list_trackable_models(self, fleet_id: str = None) -> List['models.TrackableAsset']:
+    async def list_trackable_models(self, fleet_id: str = None) -> List['models.TrackableAsset']:
         """List trackable models for this driver.
 
         Depending on the org settings, this will return a model that contains a source ID.
@@ -458,7 +441,7 @@ class Driver(models.custom.PrivateAPIHandler, models.risk.CommonRisk):
             List[TrackableAsset]: assets that can be tracked for different insurance use-cases.
         """
         if not self.api.org_data:
-            self.api.refresh_org_data()
+            await self.api.refresh_org_data()
 
         # todo: check enforcements from org
         # todo: add enforcement to org
@@ -483,7 +466,7 @@ class Driver(models.custom.PrivateAPIHandler, models.risk.CommonRisk):
                     if fleet_id is not None:
                         if fleet.id != fleet_id:
                             continue
-                    driver_record = fleet.get_driver(self.id)
+                    driver_record = await fleet.get_driver(self.id)
                     if driver_record:
                         assets.append(driver_record)
         elif sid_type == 'fdrv' or sid_type == 'frv':
@@ -494,7 +477,7 @@ class Driver(models.custom.PrivateAPIHandler, models.risk.CommonRisk):
                     if fleet_id is not None:
                         if fleet.id != fleet_id:
                             continue
-                    for fdrv in fleet.list_driver_vehicle_assignments(
+                    async for fdrv in fleet.list_driver_vehicle_assignments(
                             self.id,
                             include_unassigned=(sid_type == 'frv')):
                         if sid_type == 'fdrv':

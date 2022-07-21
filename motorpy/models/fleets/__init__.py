@@ -324,13 +324,13 @@ class Fleet(models.PrivateAPIHandler):
             data=data
         ))
 
-    def list_drivers(self) -> Generator[List[FleetDriver], None, None]:
+    async def list_drivers(self) -> Generator[List[FleetDriver], None, None]:
         """List the drivers in the fleet
 
         Returns:
             List[FleetDriver]: the drivers
         """
-        for d in self.api.batch_fetch(f"/fleets/{self.id}/drivers"):
+        async for d in self.api.batch_fetch(f"/fleets/{self.id}/drivers"):
             yield FleetDriver(api=self.api, **d)
 
     # * **********************************************************************************************************************
@@ -393,13 +393,13 @@ class Fleet(models.PrivateAPIHandler):
             data=data
         ))
 
-    def list_vehicles(self) -> Generator[FleetVehicle, None, None]:
+    async def list_vehicles(self) -> Generator[FleetVehicle, None, None]:
         """List the vehicles in the fleet
 
         Returns:
             Generator[FleetVehicle, None, None]: the vehicle assignments
         """
-        for v in self.api.batch_fetch(f"/fleets/{self.id}/vehicles"):
+        async for v in self.api.batch_fetch(f"/fleets/{self.id}/vehicles"):
             yield FleetVehicle(api=self.api, **v)
 
     # * **********************************************************************************************************************
@@ -461,7 +461,7 @@ class Fleet(models.PrivateAPIHandler):
             }
         )
     
-    def list_driver_vehicle_assignments(self, driver_id: str, include_unassigned: bool = True) -> Generator[FleetDriverVehicleAssignment, None, None]:
+    async def list_driver_vehicle_assignments(self, driver_id: str, include_unassigned: bool = True) -> Generator[FleetDriverVehicleAssignment, None, None]:
         """List the driver to vehicle assignments in the fleet.
 
         Args:
@@ -471,7 +471,7 @@ class Fleet(models.PrivateAPIHandler):
         Returns:
             Generator[FleetDriverVehicleAssignment, None, None]: the driver to vehicle assignments
         """
-        for d in self.api.batch_fetch(f"/fleets/{self.id}/drivers/{driver_id}/vehicles", params={
+        async for d in self.api.batch_fetch(f"/fleets/{self.id}/drivers/{driver_id}/vehicles", params={
                 "includeUnassigned": include_unassigned
             }):
             yield FleetDriverVehicleAssignment(api=self.api, **d)
@@ -480,13 +480,13 @@ class Fleet(models.PrivateAPIHandler):
     # * policy operations
     # * **********************************************************************************************************************
 
-    def list_policies(self) -> Generator['models.policies.Policy', None, None]:
+    async def list_policies(self) -> Generator['models.policies.Policy', None, None]:
         """List all policies for this fleet.
 
         Returns:
             Generator[Policy, None, None]: policies
         """
-        for p in self.api.batch_fetch(f"policy", params={"fleetIds": self.id}):
+        async for p in self.api.batch_fetch(f"policy", params={"fleetIds": self.id}):
             yield models.policies.Policy(api=self.api, **p)
 
 

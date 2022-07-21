@@ -45,23 +45,23 @@ class Motor(drivers.Drivers,
         vehicles.Vehicles.__init__(self, self.api)
         fleets.Fleets.__init__(self, self.api)
 
-    def close(self):
-        self.api.close_session()
+    async def close(self):
+        await self.api.close_session()
 
-    def __enter__(self):
+    async def __aenter__(self):
         return self
 
-    def __exit__(self, exc_type, exc_val, exc_tb):
-        self.close()
+    async def __aexit__(self, exc_type, exc_val, exc_tb):
+        await self.close()
     
-    def org_settings(self) -> 'OrgSettings':
+    async def org_settings(self) -> 'OrgSettings':
         """Get the organization settings.
 
         Returns:
             OrgSettings: the organization settings.
         """
         if not self.api.org_data:
-            self.api.refresh_org_data()
+            await self.api.refresh_org_data()
         return self.api.org_data
     
     def language(self):
@@ -72,10 +72,12 @@ class Motor(drivers.Drivers,
         """
         return self.org_settings().default_lang
     
-    def org_name(self):
+    async def org_name(self):
         """Get the organization name.
 
         Returns:
             str: the organization name.
         """
-        return self.org_settings().display_name
+        if self.api.org_data:
+            return self.api.org_data.display_name
+        return await self.org_settings().display_name

@@ -11,7 +11,7 @@ class UserAuth(JWTAuth):
                  password: str):
         super().__init__(url, org_id, "user", email, password)
 
-    def signup(self,
+    async def signup(self,
                email: str,
                password: str,
                first_name: str,

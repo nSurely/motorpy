@@ -116,7 +116,7 @@ class DriverVehicle(PrivateAPIHandler, CommonRisk):
         """
         return self.source_id
 
-    def list_policies(self, loose_match: bool = True, is_active_policy: bool = None) -> Generator['models.policies.Policy', None, None]:
+    async def list_policies(self, loose_match: bool = True, is_active_policy: bool = None) -> Generator['models.policies.Policy', None, None]:
         """List policies for this vehicle.
 
         Args:
@@ -134,7 +134,7 @@ class DriverVehicle(PrivateAPIHandler, CommonRisk):
         if is_active_policy is not None:
             params["isActivePolicy"] = is_active_policy
 
-        for p in self.api.batch_fetch(f"policy", params=params):
+        async for p in self.api.batch_fetch(f"policy", params=params):
             yield models.policies.Policy(api=self.api, **p)
 
     def create_policy(self, policy: 'models.policies.Policy' = None) -> 'models.policies.Policy':

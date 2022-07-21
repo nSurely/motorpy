@@ -1,4 +1,4 @@
-import requests
+import aiohttp
 from .jwt import JWTAuth
 from .exceptions import DriverCreateError
 
@@ -11,13 +11,13 @@ class DriverAuth(JWTAuth):
                  password: str):
         super().__init__(url, org_id, "driver", email, password)
 
-    def signup(self,
-               email: str,
-               password: str,
-               first_name: str,
-               last_name: str,
-               fields: dict = None,
-               login: bool = True) -> dict:
+    async def signup(self,
+                     email: str,
+                     password: str,
+                     first_name: str,
+                     last_name: str,
+                     fields: dict = None,
+                     login: bool = True) -> dict:
         """Create a new driver profile.
 
         Args:
@@ -38,7 +38,7 @@ class DriverAuth(JWTAuth):
         fields["firstName"] = first_name
         fields["lastName"] = last_name
 
-        driver_resp = requests.post(
+        driver_resp = await self.session.post(
             f"/org/{self.api_handler.org_id}/drivers",
             data=fields
         )
@@ -50,6 +50,6 @@ class DriverAuth(JWTAuth):
 
         # login the driver
         if login:
-            self.login(email, password)
+            await self.login(email, password)
 
         return driver_resp.json()

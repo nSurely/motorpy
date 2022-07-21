@@ -24,7 +24,7 @@ class AuthBase(metaclass=abc.ABCMeta):
         pass
 
     @abc.abstractmethod
-    def refresh(self) -> None:
+    async def refresh(self) -> None:
         """
         Refreshes the auth token.
         """
@@ -57,21 +57,21 @@ class JWTAuthBase(AuthBase):
     Abstract base class for any JWT authentication method.
     """
     @abc.abstractmethod
-    def login(self, email: str, password: str) -> str:
+    async def login(self, email: str, password: str) -> str:
         """
         Login the user/driver.
         """
         pass
 
     @abc.abstractmethod
-    def logout(self) -> bool:
+    async def logout(self) -> bool:
         """
         Signs out the user/driver.
         """
         pass
 
     @abc.abstractmethod
-    def signup(self,
+    async def signup(self,
                email: str,
                password: str,
                first_name: str,

@@ -31,7 +31,7 @@ class PrivateAPIHandler(CustomBaseModel):
     class Config:
         allow_populatiion_by_field_name = True
 
-    def _update(self, persist: bool = False, **kwargs) -> None:
+    async def _update(self, persist: bool = False, **kwargs) -> None:
         """
         Update a field on the model, call update to persist changes in the API.
         This tracks what has changed and only updates the API if something has changed or is set.
@@ -48,9 +48,9 @@ class PrivateAPIHandler(CustomBaseModel):
             object.__setattr__(self, key, value)
             self.__fields_set__.add(key)
         if persist:
-            self._save()
+            await self._save()
 
-    def _save(self, url: str, fields: dict = None, exclude: Set[str] = None, params: dict = None) -> Optional[dict]:
+    async def _save(self, url: str, fields: dict = None, exclude: Set[str] = None, params: dict = None) -> Optional[dict]:
         """
         Update via the API.
 
@@ -69,7 +69,7 @@ class PrivateAPIHandler(CustomBaseModel):
         ) if not fields else fields
         if not data:
             return
-        return self.api.request(
+        return await self.api.request(
             "PATCH",
             url,
             data=data,

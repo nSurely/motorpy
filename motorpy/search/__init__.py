@@ -38,3 +38,8 @@ class Search:
     
     def __str__(self) -> str:
         return f"{self.operator}.{self._get_value_str()}"
+    
+    def __repr__(self) -> str:
+        return f"Search({self.value}, {self.operator})"
+    
+    

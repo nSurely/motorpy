@@ -1,7 +1,5 @@
 import aiohttp
-import requests
 import os
-import asyncio
 from motorpy.auth import Auth
 
 from .exceptions import APIError
@@ -9,26 +7,13 @@ from .org import OrgSettings
 from typing import Generator, List, Optional, Tuple
 
 
-def _make_request(method: str, url: str,
-                  params: dict = None,
-                  data: dict = None,
-                  headers: dict = None,
-                  timeout=10.0) -> Tuple[Optional[dict], int]:
-    """
-    Make synchronous request to the API
-    """
-    res = requests.request(method, url, headers=headers,
-                           params=params, data=data, timeout=timeout)
-    return res.json() if res.json() and res.status_code != 204 else None, res.status_code
-
-
-async def _async_request(session: aiohttp.ClientSession,
-                         method: str,
-                         url: str,
-                         params: dict = None,
-                         data: dict = None,
-                         headers: dict = None,
-                         timeout=10.0) -> Tuple[Optional[dict], int]:
+async def _make_request(session: aiohttp.ClientSession,
+                        method: str,
+                        url: str,
+                        params: dict = None,
+                        data: dict = None,
+                        headers: dict = None,
+                        timeout=10.0) -> Tuple[Optional[dict], int]:
     """
     Make asynchronous request to the API.
     """
@@ -42,16 +27,13 @@ class APIHandlerNoAuth:
                  org_id: str,
                  region: str = None,
                  url: str = None,
-                 timeout: float = 10.0,
-                 async_requests: bool = False) -> None:
+                 timeout: float = 10.0) -> None:
         self.org_id = org_id
         self.region = region
         self.url = url
         self.timeout = timeout
-        self.async_requests = async_requests
 
-        # async session to be used if async_requests is True
-        self.session = aiohttp.ClientSession() if async_requests else None
+        self.session = aiohttp.ClientSession()
 
         if not self.region and not self.url:
             raise ValueError("Region or URL must be specified.")
@@ -77,37 +59,28 @@ class APIHandlerNoAuth:
         # check this on recursion
         self._org_data_refreshing = False
 
-    def _loop_request(self,
-                      method: str,
-                      url: str,
-                      params: dict = None,
-                      data: dict = None,
-                      headers: dict = None) -> Tuple[Optional[dict], int]:
-        if not self.async_requests:
-            body, status = _make_request(
-                method,
-                url,
-                params=params,
-                data=data,
-                headers=headers,
-                timeout=self.timeout)
-        else:
-            body, status = asyncio.run(_async_request(self.session,
-                                                      method,
-                                                      url,
-                                                      params=params,
-                                                      data=data,
-                                                      headers=headers,
-                                                      timeout=self.timeout))
+    async def _loop_request(self,
+                            method: str,
+                            url: str,
+                            params: dict = None,
+                            data: dict = None,
+                            headers: dict = None) -> Tuple[Optional[dict], int]:
+        body, status = await _make_request(self.session,
+                                           method,
+                                           url,
+                                           params=params,
+                                           data=data,
+                                           headers=headers,
+                                           timeout=self.timeout)
         return body, status
 
-    def request(self,
-                method: str,
-                endpoint: str,
-                params: dict = None,
-                data: dict = None,
-                headers: dict = None,
-                url_override: str = None) -> Optional[dict]:
+    async def request(self,
+                      method: str,
+                      endpoint: str,
+                      params: dict = None,
+                      data: dict = None,
+                      headers: dict = None,
+                      url_override: str = None) -> Optional[dict]:
         """Make a request to the API.
 
         Args:
@@ -127,7 +100,7 @@ class APIHandlerNoAuth:
         if self.org_data is None and not self._org_data_refreshing:
             self.refresh_org_data()
 
-        body, status = self._loop_request(
+        body, status = await self._loop_request(
             method, f"{self.org_url}/{endpoint}" if url_override is None else url_override,
             params=params,
             data=data,
@@ -138,28 +111,22 @@ class APIHandlerNoAuth:
         else:
             raise APIError(f"API responded with {status}")
 
-    def refresh_org_data(self) -> None:
+    async def refresh_org_data(self) -> None:
         """Refresh the org data."""
         try:
             self._org_data_refreshing = True
-            self.org_data = OrgSettings(**self.request(
+            val = await self.request(
                 "GET",
                 endpoint=None,
                 url_override=f"{self.url}/public/{self.org_id}"
-            ))
+            )
+            self.org_data = OrgSettings(**val)
         finally:
             self._org_data_refreshing = False
 
-    def close_session(self) -> None:
+    async def close_session(self) -> None:
         """Close the asynchronous session."""
-        if self.async_requests:
-            self.session.close()
-
-    def __del__(self) -> None:
-        # ! this is only called when ref count is 0
-        # so in practice this wont be called but just in case
-        # better to use context manager!
-        self.close_session()
+        await self.session.close()
 
 
 class APIHandler(APIHandlerNoAuth):
@@ -191,7 +158,7 @@ class APIHandler(APIHandlerNoAuth):
 
         super().__init__(org_id, region, url, timeout)
 
-    def _make_request(self, method: str, url: str, **kwargs) -> Tuple[Optional[dict], int]:
+    async def _make_request(self, method: str, url: str, **kwargs) -> Tuple[Optional[dict], int]:
         if self.auth.requires_refresh():
             self.auth.refresh()
 
@@ -203,10 +170,10 @@ class APIHandler(APIHandlerNoAuth):
             **self.auth.get_headers()
         }
 
-        return self._loop_request(method,
-                                  url,
-                                  headers=kwargs['headers'],
-                                  params=kwargs.get('params', {}))
+        return await self._loop_request(method,
+                                        url,
+                                        headers=kwargs['headers'],
+                                        params=kwargs.get('params', {}))
 
     def auth_ok(self) -> bool:
         """Check if the auth token is still valid."""
@@ -216,21 +183,21 @@ class APIHandler(APIHandlerNoAuth):
             return False
         return True
 
-    def check_auth(self) -> None:
+    async def check_auth(self) -> None:
         if not self.auth_ok():
             if not self.auth.is_logged_in():
-                self.auth.login()
+                await self.auth.login()
                 return
             if self.auth.requires_refresh():
-                self.auth.refresh()
+                await self.auth.refresh()
 
-    def request(self,
-                method: str,
-                endpoint: str,
-                params: dict = None,
-                data: dict = None,
-                headers: dict = None,
-                url_override: str = None) -> dict:
+    async def request(self,
+                      method: str,
+                      endpoint: str,
+                      params: dict = None,
+                      data: dict = None,
+                      headers: dict = None,
+                      url_override: str = None) -> dict:
         """Make a request to the API.
 
         Args:
@@ -250,16 +217,16 @@ class APIHandler(APIHandlerNoAuth):
         headers = headers or {}
         params = params or {}
 
-        self.check_auth()
+        await self.check_auth()
 
-        body, status = self._make_request(
+        body, status = await self._make_request(
             method, f"{self.org_url}/{endpoint}" if url_override is None else url_override,
             params=params, data=data, headers=headers)
 
         if status == 401:
-            self.check_auth()
+            await self.check_auth()
             headers.update(self.auth.get_headers())
-            body, status = self._make_request(
+            body, status = await self._make_request(
                 method,
                 f"{self.org_url}/{endpoint}" if url_override is None else url_override,
                 params=params,
@@ -271,7 +238,7 @@ class APIHandler(APIHandlerNoAuth):
         else:
             raise APIError(f"API responded with {status} - {body}")
 
-    def download_file(self, url: str, file_location: str, save_dir: str = None) -> str:
+    async def download_file(self, url: str, file_location: str, save_dir: str = None) -> str:
         """Downloads a file to local disk.
 
         Args:
@@ -282,7 +249,7 @@ class APIHandler(APIHandlerNoAuth):
         Returns:
             str: the file location
         """
-        self.check_auth()
+        await self.check_auth()
 
         local_filename = file_location.split('/')[-1]
         if save_dir is None:
@@ -291,19 +258,19 @@ class APIHandler(APIHandlerNoAuth):
             save_loc = os.path.abspath(save_dir)
             save_loc = os.path.join(save_loc, local_filename)
 
-        with requests.get(os.path.join(url, file_location), headers=self.auth.get_headers(), stream=True) as r:
+        async with self.session.get(os.path.join(url, file_location), headers=self.auth.get_headers(), stream=True) as r:
             r.raise_for_status()
             with open(save_loc, 'wb') as f:
                 for chunk in r.iter_content(chunk_size=8192):
                     f.write(chunk)
         return save_loc
 
-    def telematics_request(self,
-                           method: str,
-                           endpoint: str,
-                           params: dict = None,
-                           data: dict = None,
-                           headers: dict = None) -> Optional[dict]:
+    async def telematics_request(self,
+                                 method: str,
+                                 endpoint: str,
+                                 params: dict = None,
+                                 data: dict = None,
+                                 headers: dict = None) -> Optional[dict]:
         """Make a request to the API.
 
         Args:
@@ -319,7 +286,7 @@ class APIHandler(APIHandlerNoAuth):
         Returns:
             Optional[dict]: response body if supplied.
         """
-        body, status = self._loop_request(
+        body, status = await self._loop_request(
             method, f"{self.telematics_url}/{endpoint}", params=params, data=data, headers=headers)
 
         if status < 300:
@@ -327,12 +294,12 @@ class APIHandler(APIHandlerNoAuth):
         else:
             raise APIError(f"API responded with {status}")
 
-    def batch_fetch(self,
-                    endpoint: str,
-                    params: dict = None,
-                    headers: dict = None,
-                    limit: int = 50,
-                    offset: int = 0) -> Generator[List[dict], None, None]:
+    async def batch_fetch(self,
+                          endpoint: str,
+                          params: dict = None,
+                          headers: dict = None,
+                          limit: int = 50,
+                          offset: int = 0) -> Generator[List[dict], None, None]:
         """Fetch a batch of data from the API."""
         params = params or {}
         headers = headers or {}
@@ -341,22 +308,21 @@ class APIHandler(APIHandlerNoAuth):
         params['offset'] = offset
 
         while True:
-            body = self.request(
+            body = await self.request(
                 "GET",
                 endpoint,
                 params=params,
                 headers=headers
             )
 
-            if body:
-                yield from body
-
-                if len(body) < limit:
-                    break
-
-                offset += limit
-                params['offset'] = offset
-            else:
-                # yield empty list
-                yield from []
+            if not body:
                 break
+
+            for v in body:
+                yield v
+
+            if len(body) < limit:
+                break
+
+            offset += limit
+            params['offset'] = offset

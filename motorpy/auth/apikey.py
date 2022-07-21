@@ -21,7 +21,7 @@ class APIKeyAuth(AuthBase):
     def requires_refresh(self) -> bool:
         return False
 
-    def refresh(self) -> None:
+    async def refresh(self) -> None:
         pass
 
     def get_token(self) -> str:

@@ -8,7 +8,7 @@ class Fleets:
     def __init__(self, api: APIHandler) -> None:
         self.api = api
 
-    def get_fleet(self,
+    async def get_fleet(self,
                   fleet_id: str,
                   **query) -> models.Fleet:
         """Get a fleet record.
@@ -24,7 +24,7 @@ class Fleets:
             **query
         }
 
-        raw = self.api.request(
+        raw = await self.api.request(
             "GET", f"fleets/{fleet_id}", params=params
         )
 
@@ -34,10 +34,10 @@ class Fleets:
 
         return model
 
-    def list_fleets(self,
+    async def list_fleets(self,
                     max_records: int = None) -> Generator[models.Fleet, None, None]:
         count = 0
-        for fleet in self.api.batch_fetch("fleets"):
+        async for fleet in self.api.batch_fetch("fleets"):
             if max_records is not None:
                 if count >= max_records:
                     break
