@@ -1,8 +1,8 @@
 # MotorPy
 
-MotorPy provides a simple interface to the nSurely Motor APIs.
+MotorPy provides a simple interface to the Inaza Motor APIs.
 
-The goal of motorpy and other nSurely libraries and SDKs are to provide a layer of abstraction above the core nSurely services. By doing so, new solutions can be created in a shorter period of time as common areas such as auth, API routing and data parsing is taken care of.
+The goal of motorpy and other Inaza libraries and SDKs are to provide a layer of abstraction above the core Inaza services. By doing so, new solutions can be created in a shorter period of time as common areas such as auth, API routing and data parsing is taken care of.
 
 ---
 
@@ -23,7 +23,7 @@ auth = motorpy.Auth(
     api_secret="<<secret>"
 )
 
-# create a Motor object that interacts with nSurely's Motor APIs
+# create a Motor object that interacts with Inaza's Motor APIs
 motor = motorpy.Motor(
     org_id="<<org id>>",
     auth=auth,
