@@ -189,16 +189,20 @@ class Fleet(models.PrivateAPIHandler):
             return None
         return Fleet(api=self.api, **self.api.request("GET", f"/fleets/{self.parent_id}"))
 
-    def assign_driver(self,
-                      driver_id: str,
-                      is_vehicle_manager: bool = False,
-                      is_driver_manager: bool = False,
-                      is_billing_manager: bool = False,
-                      expires_at: datetime = None,
-                      is_active: bool = True,
-                      vehicle_ids: List[str] = None,
-                      vehicle_expires_at: Union[List[datetime], datetime] = None) -> FleetDriver:
-        """Assign a driver to the fleet
+    # * **********************************************************************************************************************
+    # * driver operations
+    # * **********************************************************************************************************************
+
+    def add_driver(self,
+                   driver_id: str,
+                   is_vehicle_manager: bool = False,
+                   is_driver_manager: bool = False,
+                   is_billing_manager: bool = False,
+                   expires_at: datetime = None,
+                   is_active: bool = True,
+                   vehicle_ids: List[str] = None,
+                   vehicle_expires_at: Union[List[datetime], datetime] = None) -> FleetDriver:
+        """Add a driver to the fleet
 
         Args:
             driver_id (str): the driver ID
@@ -273,13 +277,27 @@ class Fleet(models.PrivateAPIHandler):
             "DELETE", f"/fleets/{self.id}/drivers/{driver_id}"
         )
 
-    def update_driver_assignment(self,
-                                 driver_id: str,
-                                 is_vehicle_manager: bool = False,
-                                 is_driver_manager: bool = False,
-                                 is_billing_manager: bool = False,
-                                 expires_at: datetime = None,
-                                 is_active: bool = True) -> FleetDriver:
+    def get_driver(self, driver_id: str) -> Optional['FleetDriver']:
+        """Get a driver from the fleet
+
+        Args:
+            driver_id (str): the driver ID
+
+        Returns:
+            FleetDriver: the API response
+        """
+        return FleetDriver(
+            api=self.api,
+            **self.api.request("GET", f"/fleets/{self.id}/drivers/{driver_id}")
+        )
+
+    def update_driver(self,
+                      driver_id: str,
+                      is_vehicle_manager: bool = False,
+                      is_driver_manager: bool = False,
+                      is_billing_manager: bool = False,
+                      expires_at: datetime = None,
+                      is_active: bool = True) -> FleetDriver:
         """Update a driver assignment
 
         Args:
@@ -315,8 +333,12 @@ class Fleet(models.PrivateAPIHandler):
         for d in self.api.batch_fetch(f"/fleets/{self.id}/drivers"):
             yield FleetDriver(api=self.api, **d)
 
-    def assign_vehicle(self, vehicle_id: str, is_active: bool = True, is_open_to_all: bool = True) -> FleetVehicle:
-        """Assign a vehicle to the fleet
+    # * **********************************************************************************************************************
+    # * vehicle operations
+    # * **********************************************************************************************************************
+
+    def add_vehicle(self, vehicle_id: str, is_active: bool = True, is_open_to_all: bool = True) -> FleetVehicle:
+        """Add a vehicle to the fleet
 
         Args:
             vehicle_id (str): the vehicle ID
@@ -347,10 +369,10 @@ class Fleet(models.PrivateAPIHandler):
             "DELETE", f"/fleets/{self.id}/vehicles/{vehicle_id}"
         )
 
-    def update_vehicle_assignment(self,
-                                  vehicle_id: str,
-                                  is_active: bool = True,
-                                  is_open_to_all: bool = True) -> FleetVehicle:
+    def update_vehicle(self,
+                       vehicle_id: str,
+                       is_active: bool = True,
+                       is_open_to_all: bool = True) -> FleetVehicle:
         """Update a vehicle assignment
 
         Args:
@@ -379,6 +401,84 @@ class Fleet(models.PrivateAPIHandler):
         """
         for v in self.api.batch_fetch(f"/fleets/{self.id}/vehicles"):
             yield FleetVehicle(api=self.api, **v)
+
+    # * **********************************************************************************************************************
+    # * driver to vehicle assignment operations
+    # * **********************************************************************************************************************
+
+    def add_driver_to_vehicle(self, driver_id: str,
+                              vehicle_id: str,
+                              expires_at: datetime = None,
+                              is_active: bool = True) -> 'FleetDriverVehicleAssignment':
+        """Add a driver to a vehicle
+
+        Args:
+            driver_id (str): the driver ID
+            vehicle_id (str): the vehicle ID
+            expires_at (datetime, optional): if and when the driver assignment expires. Defaults to None.
+            is_active (bool, optional): if active in the fleet. Defaults to True.
+        """
+        return FleetDriverVehicleAssignment(api=self.api, **self.api.request(
+            "POST",
+            f"/fleets/{self.id}/drivers/{driver_id}/vehicles",
+            data={
+                "expiresAt": expires_at.isoformat() if expires_at else None,
+                "isActive": is_active,
+                "registeredVehicleId": vehicle_id
+            }
+        ))
+
+    def remove_driver_from_vehicle(self, driver_id: str, vehicle_id: str) -> None:
+        """Remove a driver from a vehicle
+
+        Args:
+            driver_id (str): the driver ID
+            vehicle_id (str): the vehicle ID
+        """
+        self.api.request(
+            "DELETE", f"/fleets/{self.id}/drivers/{driver_id}/vehicles/{vehicle_id}"
+        )
+
+    def update_driver_vehicle_assignment(self,
+                                         driver_id: str,
+                                         vehicle_id: str,
+                                         expires_at: datetime = None,
+                                         is_active: bool = True) -> None:
+        """Update a driver to vehicle assignment
+
+        Args:
+            driver_id (str): the driver ID
+            vehicle_id (str): the vehicle ID
+            expires_at (datetime, optional): if and when the driver assignment expires. Defaults to None.
+            is_active (bool, optional): if active in the fleet. Defaults to True.
+        """
+        self.api.request(
+            "PATCH",
+            f"/fleets/{self.id}/drivers/{driver_id}/vehicles/{vehicle_id}",
+            data={
+                "expiresAt": expires_at.isoformat() if expires_at else None,
+                "isActive": is_active
+            }
+        )
+    
+    def list_driver_vehicle_assignments(self, driver_id: str, include_unassigned: bool = True) -> Generator[FleetDriverVehicleAssignment, None, None]:
+        """List the driver to vehicle assignments in the fleet.
+
+        Args:
+            driver_id (str): the driver ID
+            include_unassigned (bool, optional): if to include unassigned vehicles. Defaults to True.
+
+        Returns:
+            Generator[FleetDriverVehicleAssignment, None, None]: the driver to vehicle assignments
+        """
+        for d in self.api.batch_fetch(f"/fleets/{self.id}/drivers/{driver_id}/vehicles", params={
+                "includeUnassigned": include_unassigned
+            }):
+            yield FleetDriverVehicleAssignment(api=self.api, **d)
+
+    # * **********************************************************************************************************************
+    # * policy operations
+    # * **********************************************************************************************************************
 
     def list_policies(self) -> Generator['models.policies.Policy', None, None]:
         """List all policies for this fleet.
