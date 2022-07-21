@@ -27,8 +27,8 @@ class Auth(AuthBase):
         This object can handle JWT auth and API key auth, depending on the parameters passed.
 
         Args:
-            api_key (str, optional): API key. Defaults to None.
-            api_secret (str, optional): API secret key. Defaults to None.
+            api_key (str, optional): API key, can be in format `pk:sk` or just `pk` (must supply secret in this case). Defaults to None.
+            api_secret (str, optional): API secret key. Must be supplied if api_key not in format `pk:sk`. Defaults to None.
             email (str, optional): user/driver email. Defaults to None.
             password (str, optional): user/driver password. Defaults to None.
             account_type (str, optional): JWT account type ('user' or 'driver'). Defaults to None.
@@ -47,7 +47,14 @@ class Auth(AuthBase):
         # this object implements the AuthBase ABC class
         self.auth_obj = None
 
-        if self.api_key is not None and self.api_secret is not None:
+        if self.api_key is not None:
+            if self.api_secret is None:
+                if ':' not in self.api_key:
+                    raise AuthError('Invalid API key. API key must be in the format "key:secret".')
+                splt = self.api_key.split(':')
+                self.api_secret = splt[1]
+                self.api_key = splt[0]
+            
             self.auth_method = AuthType.API_KEY
             self.auth_obj = APIKeyAuth(
                 key=self.api_key,
