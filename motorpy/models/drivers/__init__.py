@@ -2,12 +2,13 @@ import motorpy.models as models
 from pydantic import Field
 from datetime import datetime, date
 from typing import Optional, List, Generator
-# from motorpy.models.billing import BillingAccount
-# from motorpy.models.fleets import Fleet
-# from motorpy.models.risk import Risk
 
 
 class Driver(models.custom.PrivateAPIHandler, models.risk.CommonRisk):
+    """
+    The Driver object, representing a driver in the API.  
+    Billing accounts, vehicles and more can be accessed via the Driver object.
+    """
     # identifiers
     id: str = Field(
         ...,
@@ -172,9 +173,18 @@ class Driver(models.custom.PrivateAPIHandler, models.risk.CommonRisk):
     )
 
     vehicles_raw: List[dict] = Field(
-        default=[],
-        alias="fleets"
+        default=[]
     )
+
+    def list_vehicles(self) -> List[models.vehicles.DriverVehicle]:
+        """List all vehicles for this driver.
+
+        Returns:
+            List[Vehicle]: list of vehicles
+        """
+        self.vehicles_raw = self.api.request("GET",
+                                             f"drivers/{self.id}/vehicles")
+        return [models.vehicles.DriverVehicle(api=self.api, **v) for v in self.vehicles_raw]
 
     @property
     def vehicles(self) -> List['models.vehicles.DriverVehicle']:
@@ -184,18 +194,21 @@ class Driver(models.custom.PrivateAPIHandler, models.risk.CommonRisk):
             List[DriverVehicle]: vehicles
         """
         if not self.vehicles_raw:
-            self.vehicles_raw = self.api.request(
-                "GET", f"drivers/{self.id}/vehicles")
+            return self.list_vehicles()
         return [models.vehicles.DriverVehicle(api=self.api, driver_id=self.id, **v) for v in (self.vehicles_raw or [])]
 
     def to_dict(self, api_format: bool = False, **kwargs):
         return self.dict(exclude={"api"}, by_alias=api_format)
 
+    def get_display(self) -> str:
+        "A simple display string to identify the model to the user."
+        return self.full_name()
+
     def _check_id(self) -> None:
         """Check that the driver has an ID."""
         if not self.id:
             raise ValueError("Driver id is required")
-    
+
     @property
     def telematics_id(self) -> str:
         """
@@ -286,9 +299,14 @@ class Driver(models.custom.PrivateAPIHandler, models.risk.CommonRisk):
 
     # fleets
 
+    def list_fleets(self) -> List['models.fleets.Fleet']:
+        "List fleets for this driver."
+        self.refresh()
+        return self.fleets
+
     @property
     def fleets(self) -> List['models.fleets.Fleet']:
-        """List fleets for this driver.
+        """List fleets for this driver. Use list_fleets to refresh data and return.
 
         Returns:
             List[Fleet]: fleets
@@ -363,7 +381,17 @@ class Driver(models.custom.PrivateAPIHandler, models.risk.CommonRisk):
         api = self.api
         self.__init__(
             **self.api.request("GET",
-                               f"/drivers/{self.id}"),
+                               f"/drivers/{self.id}",
+                               params={
+                                   "risk": True,
+                                   "address": True,
+                                   "fleets": True,
+                                   "files": True,
+                                   "contact": True,
+                                   "occupation": True,
+                                   "points": True,
+                                   "policies": True
+                               }),
             api=api
         )
 
@@ -404,30 +432,72 @@ class Driver(models.custom.PrivateAPIHandler, models.risk.CommonRisk):
         """
         self._update(persist=persist, **kwargs)
 
-    def list_trackable_models(self) -> List['models.TrackableAsset']:
+    def list_trackable_models(self, fleet_id: str = None) -> List['models.TrackableAsset']:
         """List trackable models for this driver.
 
         Depending on the org settings, this will return a model that contains a source ID.
         The source ID (not the ID) will be used to identify the model for telematics.
+
+        Args:
+            fleet_id (str, optional): the fleet ID to filter on. Defaults to None.
 
         Returns:
             List[TrackableAsset]: assets that can be tracked for different insurance use-cases.
         """
         if not self.api.org_data:
             self.api.refresh_org_data()
-        if self.api.org_data.source_id_type == 'drv':
+
+        # todo: check enforcements from org
+        # todo: add enforcement to org
+
+        # todo: list from policy general route
+
+        sid_type = self.api.org_data.source_id_type
+
+        assets: List['models.TrackableAsset'] = []
+
+        if sid_type == 'drv':
             return [drv for drv in self.vehicles if drv.is_active]
-        elif self.api.org_data.source_id_type == 'rv':
+        elif sid_type == 'rv':
             # returns only active RVs
             return [drv.vehicle for drv in self.vehicles if drv.is_active and drv.vehicle.is_active]
-        
-        # todo: implement fleet logic
+        elif sid_type == 'd':
+            return [self]
+        elif sid_type == 'fd':
+            fleets = self.fleets
+            if fleets:
+                for fleet in fleets:
+                    if fleet_id is not None:
+                        if fleet.id != fleet_id:
+                            continue
+                    driver_record = fleet.get_driver(self.id)
+                    if driver_record:
+                        assets.append(driver_record)
+        elif sid_type == 'fdrv' or sid_type == 'frv':
+            # frv and fdrvs will be returned here as 'open to all' frv's are returned as well
+            fleets = self.fleets
+            if fleets:
+                for fleet in fleets:
+                    if fleet_id is not None:
+                        if fleet.id != fleet_id:
+                            continue
+                    for fdrv in fleet.list_driver_vehicle_assignments(
+                            self.id,
+                            include_unassigned=(sid_type == 'frv')):
+                        if sid_type == 'fdrv':
+                            # only return fdrvs that are assigned to the driver and active
+                            if fdrv.is_assigned and fdrv.is_active:
+                                assets.append(fdrv.driver)
+                                continue
+                        else:
+                            if not fdrv.is_assigned and fdrv.is_active:
+                                assets.append(fdrv)
+        return assets
 
-        return []
-    
     @property
     def tracking_id(self) -> Optional[str]:
-        """Get the tracking ID for this driver.
+        """
+        Get the tracking ID for this driver.
 
         Returns:
             str: tracking ID
@@ -436,7 +506,6 @@ class Driver(models.custom.PrivateAPIHandler, models.risk.CommonRisk):
         if not assets:
             return None
         return assets[0].source_id
-
 
 
 Driver.update_forward_refs()

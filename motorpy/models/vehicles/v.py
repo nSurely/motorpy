@@ -239,6 +239,10 @@ class VehicleType(PrivateAPIHandler):
     def _check_id(self) -> None:
         if not self.id:
             raise ValueError("id must be set.")
+    
+    def get_display(self) -> str:
+        "A simple display string to identify the model to the user."
+        return f"{self.brand} {self.model}"
 
     def refresh(self) -> None:
         """

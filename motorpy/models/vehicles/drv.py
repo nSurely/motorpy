@@ -99,6 +99,12 @@ class DriverVehicle(PrivateAPIHandler, CommonRisk):
 
     class Config:
         anystr_strip_whitespace = True
+    
+    def get_display(self) -> str:
+        "A simple display string to identify the model to the user."
+        if self.vehicle:
+            return f"{self.display_name} ({self.vehicle.get_display()})"
+        return self.display_name or "Unknown"
 
     @property
     def telematics_id(self) -> str:

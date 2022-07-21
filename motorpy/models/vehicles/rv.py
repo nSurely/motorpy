@@ -184,6 +184,12 @@ class Vehicle(PrivateAPIHandler, CommonRisk):
         allow_population_by_field_name = True
         anystr_strip_whitespace = True
     
+    def get_display(self) -> str:
+        "A simple display string to identify the model to the user."
+        if self.vehicle_type:
+            return f"{self.vehicle_type.get_display()} - {self.reg_plate}"
+        return self.reg_plate or "Unknown"
+    
     @property
     def telematics_id(self) -> str:
         """
