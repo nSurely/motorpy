@@ -45,7 +45,7 @@ class TripManager:
         self.gyroscope = []
         self.alerts = []
 
-    def send_check(self) -> None:
+    async def send_check(self) -> None:
         "Check if we need to send a batch. If so, send it and clear."
         if (not self.gps and
             not self.accelerometer and
@@ -66,20 +66,20 @@ class TripManager:
             "alerts": self.alerts
         }
 
-        self.api.telematics_request("POST", "/track", data=body)
+        await self.api.telematics_request("POST", "/track", data=body)
         self.clear()
 
-    def add_gps(self,
-                lat: float,
-                lng: float,
-                gps_accuracy: float = None,
-                altitude: float = None,
-                acceleration: float = None,
-                speed: float = None,
-                bearing: float = None,
-                bearing_accuracy: float = None,
-                vertical_acceleration: float = None,
-                timestamp: int = None) -> None:
+    async def add_gps(self,
+                      lat: float,
+                      lng: float,
+                      gps_accuracy: float = None,
+                      altitude: float = None,
+                      acceleration: float = None,
+                      speed: float = None,
+                      bearing: float = None,
+                      bearing_accuracy: float = None,
+                      vertical_acceleration: float = None,
+                      timestamp: int = None) -> None:
         """Add a GPS point to the trip.
 
         Args:
@@ -123,13 +123,13 @@ class TripManager:
             "va": vertical_acceleration,
             "ts": timestamp
         })
-        self.send_check()
+        await self.send_check()
 
-    def add_accelerometer(self,
-                          x: float,
-                          y: float,
-                          z: float,
-                          timestamp: int = None) -> None:
+    async def add_accelerometer(self,
+                                x: float,
+                                y: float,
+                                z: float,
+                                timestamp: int = None) -> None:
         """Add an accelerometer point to the trip.
 
         Args:
@@ -153,13 +153,13 @@ class TripManager:
             "z": z,
             "ts": timestamp
         })
-        self.send_check()
+        await self.send_check()
 
-    def add_gyroscope(self,
-                      x: float,
-                      y: float,
-                      z: float,
-                      timestamp: int = None) -> None:
+    async def add_gyroscope(self,
+                            x: float,
+                            y: float,
+                            z: float,
+                            timestamp: int = None) -> None:
         """Add a gyroscope point to the trip.
 
         Args:
@@ -183,16 +183,16 @@ class TripManager:
             "z": z,
             "ts": timestamp
         })
-        self.send_check()
+        await self.send_check()
 
-    def add_alert(self,
-                  alert_code: str,
-                  measurement_1: float = None,
-                  measurement_2: float = None,
-                  measurement_3: float = None,
-                  on_device: bool = False,
-                  shown: bool = False,
-                  timestamp: int = None) -> None:
+    async def add_alert(self,
+                        alert_code: str,
+                        measurement_1: float = None,
+                        measurement_2: float = None,
+                        measurement_3: float = None,
+                        on_device: bool = False,
+                        shown: bool = False,
+                        timestamp: int = None) -> None:
         """Add an alert to the trip.
 
         Args:
@@ -222,4 +222,4 @@ class TripManager:
             "shown": shown,
             "ts": timestamp
         })
-        self.send_check()
+        await self.send_check()
