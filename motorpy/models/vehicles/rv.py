@@ -218,7 +218,7 @@ class Vehicle(PrivateAPIHandler, CommonRisk):
         async for p in self.api.batch_fetch(f"policy", params=params):
             yield models.policies.Policy(api=self.api, **p)
 
-    def create_policy(self, policy: 'models.policies.Policy' = None) -> 'models.policies.Policy':
+    async def create_policy(self, policy: 'models.policies.Policy' = None) -> 'models.policies.Policy':
         """Create a policy for this vehicle.
 
         Args:
@@ -230,7 +230,7 @@ class Vehicle(PrivateAPIHandler, CommonRisk):
         if policy is None:
             policy = models.policies.Policy(api=self.api)
         policy.policy_group = 'rv'
-        return policy.create(
+        return await policy.create(
             api_handler=self.api,
             record_id=self.id,
         )
@@ -239,29 +239,29 @@ class Vehicle(PrivateAPIHandler, CommonRisk):
         if not self.id:
             raise ValueError("id must be set.")
 
-    def refresh(self) -> None:
+    async def refresh(self) -> None:
         """
         Refresh the model from the API.
         """
         self._check_id()
         api = self.api
         self.__init__(
-            **self.api.request("GET",
-                               f"/registered-vehicles/{self.id}"),
+            **(await self.api.request("GET",
+                               f"/registered-vehicles/{self.id}")),
             api=api
         )
 
-    def delete(self) -> None:
+    async def delete(self) -> None:
         """
         Delete this record via the API.
         """
         self._check_id()
-        self.api.request(
+        await self.api.request(
             "DELETE",
             f"/registered-vehicles/{self.id}"
         )
 
-    def save(self, fields: dict = None) -> Optional[dict]:
+    async def save(self, fields: dict = None) -> Optional[dict]:
         """
         Persist any changes in the API.
 
@@ -270,13 +270,13 @@ class Vehicle(PrivateAPIHandler, CommonRisk):
         """
         self._check_id()
 
-        return self._save(
+        return await self._save(
             url=f"/registered-vehicles/{self.id}",
             fields=fields,
             exclude={'vehicle_type'}
         )
 
-    def update(self, persist: bool = False, **kwargs) -> None:
+    async def update(self, persist: bool = False, **kwargs) -> None:
         """
         Update a field on the model, call save or keyword persist to persist changes in the API.
 
@@ -286,4 +286,4 @@ class Vehicle(PrivateAPIHandler, CommonRisk):
 
         Note: when doing multiple updates, it is recommended to call update() after all updates are made.
         """
-        self._update(persist=persist, **kwargs)
+        await self._update(persist=persist, **kwargs)

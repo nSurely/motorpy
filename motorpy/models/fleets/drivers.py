@@ -66,11 +66,11 @@ class FleetDriver(models.PrivateAPIHandler):
         """
         return self.source_id
 
-    def get_fleet(self) -> Optional['models.Fleet']:
+    async def get_fleet(self) -> Optional['models.Fleet']:
         """
         Return the fleet.
 
         Returns:
             models.Fleet: fleet
         """
-        return models.Fleet(api=self.api, **self.api.request("GET", f"fleets/{self.fleet_id}")) if self.fleet_id else None
+        return models.Fleet(api=self.api, **(await self.api.request("GET", f"fleets/{self.fleet_id}"))) if self.fleet_id else None

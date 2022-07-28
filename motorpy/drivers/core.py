@@ -3,6 +3,7 @@ from motorpy.api import APIHandler
 from datetime import date
 from typing import Union, Generator
 import motorpy.search as search
+import asyncio
 
 
 class Drivers:
@@ -99,3 +100,4 @@ class Drivers:
             model.api = self.api
             yield model
             count += 1
+            await asyncio.sleep(0.0)

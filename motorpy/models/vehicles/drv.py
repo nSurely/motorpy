@@ -137,7 +137,7 @@ class DriverVehicle(PrivateAPIHandler, CommonRisk):
         async for p in self.api.batch_fetch(f"policy", params=params):
             yield models.policies.Policy(api=self.api, **p)
 
-    def create_policy(self, policy: 'models.policies.Policy' = None) -> 'models.policies.Policy':
+    async def create_policy(self, policy: 'models.policies.Policy' = None) -> 'models.policies.Policy':
         """Create a policy for this driver.
 
         Args:
@@ -149,7 +149,7 @@ class DriverVehicle(PrivateAPIHandler, CommonRisk):
         if policy is None:
             policy = models.policies.Policy(api=self.api)
         policy.policy_group = 'drv'
-        return policy.create(
+        return await policy.create(
             api_handler=self.api,
             record_id=self.id,
         )
@@ -158,7 +158,7 @@ class DriverVehicle(PrivateAPIHandler, CommonRisk):
         if not self.driver_id or not self.id:
             raise ValueError("Id and driver_id must be set.")
 
-    def refresh(self) -> None:
+    async def refresh(self) -> None:
         """
         Refresh the model from the API.
         """
@@ -166,23 +166,23 @@ class DriverVehicle(PrivateAPIHandler, CommonRisk):
         api = self.api
         driver_id = self.driver_id
         self.__init__(
-            **self.api.request("GET",
-                               f"/drivers/{self.driver_id}/vehicles/{self.id}"),
+            **(await self.api.request("GET",
+                               f"/drivers/{self.driver_id}/vehicles/{self.id}")),
             api=api,
             driver_id=driver_id
         )
 
-    def delete(self) -> None:
+    async def delete(self) -> None:
         """
         Delete the driver vehicle via the API.
         """
         self._check_id()
-        self.api.request(
+        await self.api.request(
             "DELETE",
             f"/drivers/{self.driver_id}/vehicles/{self.id}"
         )
 
-    def save(self, fields: dict = None) -> Optional[dict]:
+    async def save(self, fields: dict = None) -> Optional[dict]:
         """
         Persist any changes in the API.
 
@@ -191,13 +191,13 @@ class DriverVehicle(PrivateAPIHandler, CommonRisk):
         """
         self._check_id()
 
-        return self._save(
+        return await self._save(
             url=f"/drivers/{self.driver_id}/vehicles/{self.id}",
             fields=fields,
             exclude={'driver_id', 'vehicle'}
         )
 
-    def update(self, persist: bool = False, **kwargs) -> None:
+    async def update(self, persist: bool = False, **kwargs) -> None:
         """
         Update a field on the model, call save or keyword persist to persist changes in the API.
 
@@ -207,7 +207,7 @@ class DriverVehicle(PrivateAPIHandler, CommonRisk):
 
         Note: when doing multiple updates, it is recommended to call update() after all updates are made.
         """
-        self._update(persist=persist, **kwargs)
+        await self._update(persist=persist, **kwargs)
 
 
 DriverVehicle.update_forward_refs()

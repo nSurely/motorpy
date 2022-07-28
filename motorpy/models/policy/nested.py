@@ -168,29 +168,29 @@ class Policy(PolicyBase):
         if not self.id:
             raise ValueError("id must be set.")
 
-    def refresh(self) -> None:
+    async def refresh(self) -> None:
         """
         Refresh the model from the API.
         """
         self._check_id()
         api = self.api
         self.__init__(
-            **self.api.request("GET",
-                               f"/policy/{self.id}"),
+            **(await self.api.request("GET",
+                                      f"/policy/{self.id}")),
             api=api
         )
 
-    def delete(self) -> None:
+    async def delete(self) -> None:
         """
         Delete this record via the API.
         """
         self._check_id()
-        self.api.request(
+        await self.api.request(
             "DELETE",
             f"/policy/{self.id}"
         )
 
-    def save(self, fields: dict = None) -> Optional[dict]:
+    async def save(self, fields: dict = None) -> Optional[dict]:
         """
         Persist any changes in the API.
 
@@ -199,13 +199,13 @@ class Policy(PolicyBase):
         """
         self._check_id()
 
-        return self._save(
+        return await self._save(
             url=f"/policy/{self.id}",
             fields=fields,
             exclude=None
         )
 
-    def update(self, persist: bool = False, **kwargs) -> None:
+    async def update(self, persist: bool = False, **kwargs) -> None:
         """
         Update a field on the model, call save or keyword persist to persist changes in the API.
 
@@ -218,13 +218,13 @@ class Policy(PolicyBase):
 
         Note: when doing multiple updates, it is recommended to call update() after all updates are made.
         """
-        self._update(persist=persist, **kwargs)
+        await self._update(persist=persist, **kwargs)
 
-    def create(self,
-               api_handler,
-               record_id: str,
-               driver_id: str = None,
-               vehicle_id: str = None) -> 'Policy':
+    async def create(self,
+                     api_handler,
+                     record_id: str,
+                     driver_id: str = None,
+                     vehicle_id: str = None) -> 'Policy':
         """
         Create a policy.
 
@@ -299,7 +299,7 @@ class Policy(PolicyBase):
 
             params["vehicleId"] = vehicle_id
 
-        res = api_handler.request("POST",
+        res = await api_handler.request("POST",
                                   f"policy/{record_id}",
                                   params=params,
                                   data=self.dict(

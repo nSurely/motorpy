@@ -209,17 +209,6 @@ class Driver(models.custom.PrivateAPIHandler, models.risk.CommonRisk):
                                                    f"drivers/{self.id}/vehicles")
         return [models.vehicles.DriverVehicle(api=self.api, **v) for v in self.vehicles_raw]
 
-    @property
-    def vehicles(self) -> List['models.vehicles.DriverVehicle']:
-        """List vehicles for this driver.
-
-        Returns:
-            List[DriverVehicle]: vehicles
-        """
-        if not self.vehicles_raw:
-            return self.list_vehicles()
-        return [models.vehicles.DriverVehicle(api=self.api, driver_id=self.id, **v) for v in (self.vehicles_raw or [])]
-
     def to_dict(self, api_format: bool = False, **kwargs):
         return self.dict(exclude={"api"}, by_alias=api_format)
 
@@ -453,14 +442,14 @@ class Driver(models.custom.PrivateAPIHandler, models.risk.CommonRisk):
         assets: List['models.TrackableAsset'] = []
 
         if sid_type == 'drv':
-            return [drv for drv in self.vehicles if drv.is_active]
+            return [drv for drv in (await self.list_vehicles()) if drv.is_active]
         elif sid_type == 'rv':
             # returns only active RVs
-            return [drv.vehicle for drv in self.vehicles if drv.is_active and drv.vehicle.is_active]
+            return [drv.vehicle for drv in (await self.list_vehicles()) if drv.is_active and drv.vehicle.is_active]
         elif sid_type == 'd':
             return [self]
         elif sid_type == 'fd':
-            fleets = self.fleets
+            fleets = await self.list_fleets()
             if fleets:
                 for fleet in fleets:
                     if fleet_id is not None:
@@ -471,7 +460,7 @@ class Driver(models.custom.PrivateAPIHandler, models.risk.CommonRisk):
                         assets.append(driver_record)
         elif sid_type == 'fdrv' or sid_type == 'frv':
             # frv and fdrvs will be returned here as 'open to all' frv's are returned as well
-            fleets = self.fleets
+            fleets = await self.list_fleets()
             if fleets:
                 for fleet in fleets:
                     if fleet_id is not None:
@@ -491,14 +480,14 @@ class Driver(models.custom.PrivateAPIHandler, models.risk.CommonRisk):
         return assets
 
     @property
-    def tracking_id(self) -> Optional[str]:
+    async def tracking_id(self) -> Optional[str]:
         """
         Get the tracking ID for this driver.
 
         Returns:
             str: tracking ID
         """
-        assets = self.list_trackable_models()
+        assets = await self.list_trackable_models()
         if not assets:
             return None
         return assets[0].source_id

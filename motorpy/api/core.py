@@ -20,6 +20,11 @@ async def _make_request(session: aiohttp.ClientSession,
     async with session.request(method, url, params=params, data=data, headers=headers, timeout=timeout) as res:
         return await res.json() if await res.json() and res.status != 204 else None, res.status
 
+def param_str(params: dict) -> dict:
+    "Calls __str__ on each value"
+    if not params:
+        return {}
+    return {k: str(v) for k, v in params.items()}
 
 class APIHandlerNoAuth:
 
@@ -68,7 +73,7 @@ class APIHandlerNoAuth:
         body, status = await _make_request(self.session,
                                            method,
                                            url,
-                                           params=params,
+                                           params=param_str(params),
                                            data=data,
                                            headers=headers,
                                            timeout=self.timeout)
@@ -102,7 +107,7 @@ class APIHandlerNoAuth:
 
         body, status = await self._loop_request(
             method, f"{self.org_url}/{endpoint}" if url_override is None else url_override,
-            params=params,
+            params=param_str(params),
             data=data,
             headers=headers)
 
@@ -221,7 +226,7 @@ class APIHandler(APIHandlerNoAuth):
 
         body, status = await self._make_request(
             method, f"{self.org_url}/{endpoint}" if url_override is None else url_override,
-            params=params, data=data, headers=headers)
+            params=param_str(params), data=data, headers=headers)
 
         if status == 401:
             await self.check_auth()
@@ -229,7 +234,7 @@ class APIHandler(APIHandlerNoAuth):
             body, status = await self._make_request(
                 method,
                 f"{self.org_url}/{endpoint}" if url_override is None else url_override,
-                params=params,
+                params=param_str(params),
                 data=data,
                 headers=headers)
 
@@ -287,7 +292,10 @@ class APIHandler(APIHandlerNoAuth):
             Optional[dict]: response body if supplied.
         """
         body, status = await self._loop_request(
-            method, f"{self.telematics_url}/{endpoint}", params=params, data=data, headers=headers)
+            method, f"{self.telematics_url}/{endpoint}", 
+            params=param_str(params), 
+            data=data, 
+            headers=headers)
 
         if status < 300:
             return body
@@ -311,7 +319,7 @@ class APIHandler(APIHandlerNoAuth):
             body = await self.request(
                 "GET",
                 endpoint,
-                params=params,
+                params=param_str(params),
                 headers=headers
             )
 
