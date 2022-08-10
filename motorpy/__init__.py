@@ -1,6 +1,8 @@
 # core class for motorpy
 from motorpy.base import Motor
 
+from motorpy.api.exceptions import *
+
 # auth needed for API requests
 from motorpy.auth import Auth
 

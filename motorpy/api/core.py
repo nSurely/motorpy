@@ -2,7 +2,7 @@ import aiohttp
 import os
 from motorpy.auth import Auth
 
-from .exceptions import APIError
+from .exceptions import APIError, APIAuthError
 from .org import OrgSettings
 from typing import Generator, List, Optional, Tuple
 
@@ -113,6 +113,8 @@ class APIHandlerNoAuth:
 
         if status < 300:
             return body
+        elif status == 401:
+            raise APIAuthError("Not authenticated")
         else:
             raise APIError(f"API responded with {status}")
 

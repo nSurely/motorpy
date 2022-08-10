@@ -11,6 +11,7 @@ import motorpy.vehicles as vehicles
 import motorpy.fleets as fleets
 from motorpy.auth import Auth
 from motorpy.api import APIHandler
+from motorpy.api.core import APIHandlerNoAuth
 from motorpy.api.org import OrgSettings
 
 NAME = "motorpy"
@@ -35,7 +36,7 @@ class Motor(drivers.Drivers,
 
     def __init__(self,
                  org_id: str,
-                 auth: Auth,
+                 auth: Auth = None,
                  region: str = None,
                  url: str = None) -> None:
 
@@ -46,7 +47,10 @@ class Motor(drivers.Drivers,
 
         # all requests are routed through here
         # this is scoped to a single org id
-        self.api = APIHandler(org_id, auth, region, url)
+        if self.auth is not None:
+            self.api = APIHandler(org_id, auth, region, url)
+        else:
+            self.api = APIHandlerNoAuth(org_id, region, url)
 
         drivers.Drivers.__init__(self, self.api)
         vehicles.Vehicles.__init__(self, self.api)
@@ -71,13 +75,15 @@ class Motor(drivers.Drivers,
             await self.api.refresh_org_data()
         return self.api.org_data
 
-    def language(self):
+    async def language(self):
         """Get the organization language.
 
         Returns:
             str: the organization language.
         """
-        return self.org_settings().default_lang
+        if self.api.org_data:
+            return self.api.org_data.default_lang
+        return await self.org_settings().default_lang
 
     async def org_name(self):
         """Get the organization name.
