@@ -16,24 +16,20 @@ The goal of motorpy and other Inaza libraries and SDKs are to provide a layer of
 
 ```python
 import motorpy
+import asyncio
 
-# set your authorization method
-auth = motorpy.Auth(
-    api_key="<<key>>",
-    api_secret="<<secret>"
-)
+async def main():
+    auth = motorpy.Auth(api_key="<<my api key>>")
 
-# create a Motor object that interacts with Inaza's Motor APIs
-motor = motorpy.Motor(
-    org_id="<<org id>>",
-    auth=auth,
-    region="eu-1"
-)
+    async with motorpy.Motor(org_id='my-org-id', auth=auth, region="eu-1") as motor:
+        # the Motor object will return pydantic models with convenience methods
+        driver = await motor.get_driver("2c299d7f-7cc3-4e1b-8810-ae180c971c75")
 
-# the Motor object will return pydantic models with convenience methods
-driver = motor.get_driver("2c299d7f-7cc3-4e1b-8810-ae180c971c75")
+        print(driver.full_name()) # "John Doe"
 
-print(driver.full_name()) # John Doe
+        ba = await driver.get_primary_billing_account()
+        print(ba) # <BillingAccount>
 
-print(driver.get_primary_billing_account()) # {...}
-```
+if __name__ == "__main__":
+    asyncio.run(main())
+```  
