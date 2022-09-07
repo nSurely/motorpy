@@ -1,4 +1,4 @@
-name: "Pull Request Docs Check"
+name: "Sphinx - Build Docs"
 on:
   # Triggers the workflow on push or pull request events but only for the main branch
   push:
@@ -18,4 +18,4 @@ jobs:
       run: |
         pip install -r requirements.txt
         pip install -U sphinx
-        sphinx-build -D todo_include_todos=0 docs ./docs/_build/html/
+        sphinx-build -D todo_include_todos=0 docs/source ./docs/_build/html/
