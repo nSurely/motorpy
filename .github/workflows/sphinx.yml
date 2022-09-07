@@ -11,6 +11,10 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v1
-    - uses: ammaraskar/sphinx-action@master
-      with:
-        docs-folder: "docs/"
+    # - uses: ammaraskar/sphinx-action@master
+    #   with:
+    #     docs-folder: "docs/"
+    - name: directly build sphinx
+      run: |
+        pip install -r requirements.txt
+        sphinx-build -D todo_include_todos=0 docs ./docs/_build/html/
