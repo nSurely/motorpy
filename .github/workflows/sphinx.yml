@@ -17,5 +17,6 @@ jobs:
     - name: directly build sphinx
       run: |
         pip install -r requirements.txt
+        pip install rinohtype
         pip install -U sphinx
         sphinx-build -D todo_include_todos=0 docs/source ./docs/_build/html/
