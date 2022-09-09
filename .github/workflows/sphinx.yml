@@ -2,21 +2,47 @@ name: "Sphinx - Build Docs"
 on:
   # Triggers the workflow on push or pull request events but only for the main branch
   push:
-    branches: [ main ]
+    branches: [main]
   pull_request:
-    branches: [ main ]
+    branches: [main]
 
 jobs:
   docs:
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v1
-    # - uses: ammaraskar/sphinx-action@master
-    #   with:
-    #     docs-folder: "docs/"
-    - name: directly build sphinx
-      run: |
-        pip install -r requirements.txt
-        pip install rinohtype pygments==2.5.1
-        pip install -U sphinx
-        sphinx-build -D todo_include_todos=0 docs/source ./docs/_build/html/
+      - uses: actions/checkout@v1
+      # - uses: ammaraskar/sphinx-action@master
+      #   with:
+      #     docs-folder: "docs/"
+      - name: directly build sphinx
+        run: |
+          pip install -r requirements.txt
+          pip install rinohtype pygments==2.5.1
+          pip install -U sphinx
+          sphinx-build -D todo_include_todos=0 docs/source ./docs/_build/html/
+
+      - name: motor-sdk-docs Checkout
+        uses: actions/checkout@v2
+        with:
+          repository: nSurely/motor-sdk-docs
+          ref: main
+          path: "./docs-repo"
+          token: ${{ secrets.AUTOMATED_ACTIONS_TOKEN }}
+
+      - name: add swift docs to repository
+        run: |
+          rm -r ./docs-repo/python
+          mkdir ./docs-repo/python
+          mv ./docs/_build/html/* ./docs-repo/python/
+
+      - name: Commit and push changes to motor-sdk-docs
+        env:
+          ACCESS_TOKEN: ${{ secrets.AUTOMATED_ACTIONS_TOKEN }}
+        run: |
+          git config --global user.name 'GitHub Actions'
+          git config --global user.email 'actions@users.noreply.github.com'
+          cd docs-repo
+          git remote set-url origin "https://x-access-token:$ACCESS_TOKEN@github.com/nsurely/motor-sdk-docs"
+          git add -A
+          git commit -m "New Update to Python Docs"
+          git push
