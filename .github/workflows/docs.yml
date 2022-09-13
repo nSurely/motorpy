@@ -1,4 +1,4 @@
-name: "Sphinx - Build Docs"
+name: "PDoc - Build Docs"
 on:
   # Triggers the workflow on push or pull request events but only for the main branch
   push:
@@ -11,15 +11,11 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v1
-      # - uses: ammaraskar/sphinx-action@master
-      #   with:
-      #     docs-folder: "docs/"
-      - name: directly build sphinx
+      - name: directly build docs
         run: |
           pip install -r requirements.txt
-          pip install rinohtype pygments==2.5.1
-          pip install -U sphinx
-          sphinx-build -D todo_include_todos=0 docs/source ./docs/_build/html/
+          pip install pdoc3
+          pdoc --html --output-dir docs/build motorpy
 
       - name: motor-sdk-docs Checkout
         uses: actions/checkout@v2
@@ -29,11 +25,11 @@ jobs:
           path: "./docs-repo"
           token: ${{ secrets.AUTOMATED_ACTIONS_TOKEN }}
 
-      - name: add swift docs to repository
+      - name: add python docs to repository
         run: |
           rm -r ./docs-repo/python
           mkdir ./docs-repo/python
-          mv ./docs/_build/html/* ./docs-repo/python/
+          mv ./docs/build/html/* ./docs-repo/python/
 
       - name: Commit and push changes to motor-sdk-docs
         env:
