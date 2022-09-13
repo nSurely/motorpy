@@ -14,7 +14,7 @@ jobs:
       - name: directly build docs
         run: |
           pip install -r requirements.txt
-          pip install pdoc3
+          pip install pdoc3 pytest
           pdoc --html --output-dir docs/build motorpy
 
       - name: motor-sdk-docs Checkout
