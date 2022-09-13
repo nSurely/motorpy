@@ -177,7 +177,7 @@ class Policy(PolicyBase):
         """
         The premium amount for the policy.
         """
-        return self.final.final_base_premium.base_premium_value
+        return self.final.final_base_premium.final_base_premium_value
 
     async def driver_approve(self, refresh=True) -> None:
         """
