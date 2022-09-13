@@ -292,6 +292,22 @@ class Driver(models.custom.PrivateAPIHandler, models.risk.CommonRisk):
             primary_only=True)
         # make another request for the full account details
         return await self.get_billing_account(res[0].id) if res else None
+    
+    async def create_billing_account(self, account: models.billing.BillingAccount) -> models.billing.BillingAccount:
+        """Create a billing account for this driver.
+
+        Args:
+            account (BillingAccount): the account to create
+
+        Returns:
+            BillingAccount: the created account
+        """
+        self._check_id()
+        return models.billing.BillingAccount(api=self.api, **(await self.api.request(
+            "POST",
+            f"/drivers/{self.id}/billing-accounts",
+            json=account.to_dict(exclude_unset=True)
+        )))
 
     async def charge(self, amount: int = None, event: BillingEvent = None) -> BillingEvent:
         """Charge the driver. The billing event will be entered under their current primary billing account.
