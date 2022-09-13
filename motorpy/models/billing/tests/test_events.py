@@ -1,4 +1,4 @@
-import models
+from motorpy import models
 from datetime import datetime, date
 
 
@@ -13,13 +13,12 @@ class TestBillingEvent:
             message="123",
             payment_out=True,
             payment_date=datetime(2020, 1, 1),
-            status="123",
+            status="pending",
             approval_at=datetime(2020, 1, 1),
             policy_id="123",
-            type="123",
+            type="other",
             created_at=datetime(2020, 1, 1),
             billing_account=models.billing.accounts.BillingAccount(
-                id="123",
                 external_id="123",
                 expiry=date(2020, 1, 1),
                 updated_at=datetime(2020, 1, 1),

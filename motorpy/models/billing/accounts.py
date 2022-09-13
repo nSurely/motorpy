@@ -72,7 +72,7 @@ The third party identifier for the card.
 class BillingAccount(models.PrivateAPIHandler):
     # identifiers
     id: str = Field(
-        ...,
+        None,
         description="The billing account's unique ID.",
     )
     external_id: Optional[str] = Field(

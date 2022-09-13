@@ -29,7 +29,7 @@ BillingEventType = Literal[
 class BillingEvent(PrivateAPIHandler):
     # identifiers
     id: str = Field(
-        ...,
+        None,
         description="The billing event's unique ID.",
     )
     external_id: Optional[str] = Field(

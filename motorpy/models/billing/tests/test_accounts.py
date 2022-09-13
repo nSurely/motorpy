@@ -1,4 +1,4 @@
-import models
+from motorpy import models
 from datetime import datetime, date
 
 
