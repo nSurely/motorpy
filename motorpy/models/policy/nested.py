@@ -158,6 +158,18 @@ class Policy(PolicyBase):
         if not self.rates.rates_active:
             return None
         return self.final.final_rates.final_rates_value
+    
+    @property
+    def rate_per_mile(self) -> Optional[float]:
+        """
+        The rate per mile for the policy.
+
+        Returns:
+            The rate per mile for the policy. None, if rates do not apply to the policy.
+        """
+        if not self.rates.rates_active:
+            return None
+        return self.final.final_rates.final_rates_value * 1.60934
 
     @property
     def premium_amount(self) -> float:
