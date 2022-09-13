@@ -147,6 +147,7 @@ class Policy(PolicyBase):
             and self.is_driver_agreed()
         )
 
+    @property
     def rate_per_km(self) -> Optional[float]:
         """
         The rate per km for the policy.
@@ -158,6 +159,7 @@ class Policy(PolicyBase):
             return None
         return self.final.final_rates.final_rates_value
 
+    @property
     def premium_amount(self) -> float:
         """
         The premium amount for the policy.
