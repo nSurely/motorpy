@@ -306,7 +306,7 @@ class Driver(models.custom.PrivateAPIHandler, models.risk.CommonRisk):
         return fleets
 
     # policies
-    async def vehicle_policies(self, vehicle_id: str) -> List['models.policy.Policy']:
+    async def list_vehicle_policies(self, vehicle_id: str) -> List['models.policy.Policy']:
         """List policies for this driver.
 
         Returns:
