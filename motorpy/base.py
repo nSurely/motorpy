@@ -6,6 +6,7 @@ here you put your main classes and objects.
 """
 import asyncio
 import sys
+from typing import Union
 import motorpy.drivers as drivers
 import motorpy.vehicles as vehicles
 import motorpy.fleets as fleets
@@ -94,3 +95,31 @@ class Motor(drivers.Drivers,
         if self.api.org_data:
             return self.api.org_data.display_name
         return await self.org_settings().display_name
+
+    async def request(self,
+                      method: str,
+                      path: str,
+                      data: Union[dict, list] = None,
+                      params: dict = None,
+                      headers: dict = None) -> Union[dict, list]:
+        """Make a request to the API.
+
+        Args:
+            method (str): the HTTP method.
+            path (str): the path. The path is relative to the API base URL and org id, ie. <base url>/org/<org_id>/<<your path>>
+            data (Union[dict, list]): the data.
+            params (dict): the query string.
+            headers (dict): the headers.
+
+        Returns:
+            Union[dict, list]: the API body response.
+        """
+        if not path.startswith("/"):
+            path = f"/{path}"
+        return await self.api.request(
+            method=method,
+            endpoint=path,
+            data=data,
+            params=params,
+            headers=headers
+        )

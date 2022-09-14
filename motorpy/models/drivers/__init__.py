@@ -3,6 +3,8 @@ from pydantic import Field, validator, parse_raw_as, parse_obj_as
 from datetime import datetime, date
 from typing import Optional, List, Generator, Any
 
+from motorpy.models.billing.events import BillingEvent, BillingEventStatus, BillingEventType
+
 
 class Driver(models.custom.PrivateAPIHandler, models.risk.CommonRisk):
     """
@@ -263,7 +265,6 @@ class Driver(models.custom.PrivateAPIHandler, models.risk.CommonRisk):
         )
         return [models.billing.BillingAccount(api=self.api, **ba) for ba in (accounts or [])]
 
-
     async def get_billing_account(self, id: str) -> models.billing.BillingAccount:
         """Get a billing account for this driver.
 
@@ -291,6 +292,79 @@ class Driver(models.custom.PrivateAPIHandler, models.risk.CommonRisk):
             primary_only=True)
         # make another request for the full account details
         return await self.get_billing_account(res[0].id) if res else None
+    
+    async def create_billing_account(self, account: models.billing.BillingAccount) -> models.billing.BillingAccount:
+        """Create a billing account for this driver.
+
+        Args:
+            account (BillingAccount): the account to create
+
+        Returns:
+            BillingAccount: the created account
+        """
+        self._check_id()
+        return models.billing.BillingAccount(api=self.api, **(await self.api.request(
+            "POST",
+            f"/drivers/{self.id}/billing-accounts",
+            json=account.to_dict(exclude_unset=True)
+        )))
+
+    async def charge(self, amount: int = None, event: BillingEvent = None) -> BillingEvent:
+        """Charge the driver. The billing event will be entered under their current primary billing account.
+
+        Args:
+            amount (int, optional): the amount to charge. Defaults to None.
+            event (BillingEvent, optional): the billing event to charge. This overrides the amount if both are provided. Defaults to None.
+
+        Raises:
+            ValueError: if neither amount nor event are provided
+
+        Returns:
+            BillingEvent: the billing event
+        """
+        if not amount and not event:
+            raise ValueError("Either amount or event is required")
+
+        if not event:
+            event = BillingEvent(
+                amount=amount,
+                description="Charge",
+                type="other",
+            )
+
+        self._check_id()
+        return models.billing.BillingEvent(api=self.api, **(await self.api.request(
+            "POST",
+            f"/drivers/{self.id}/billing-events",
+            json=event.dict(exclude_unset=True)
+        )))
+
+    async def list_charges(self, event_type: BillingEventType = None, event_status: BillingEventStatus = None, max_records: int = None) -> Generator[BillingEvent, None, None]:
+        """List all charges for this driver.
+        
+        Args:
+            event_type (BillingEventType, optional): filter by type. Defaults to None.
+            event_status (BillingEventStatus, optional): filter by status. Defaults to None.
+            max_records (int, optional): maximum number of records to return. Defaults to None.
+
+        Yields:
+            Generator[BillingEvent, None, None]: billing events
+        """
+        self._check_id()
+
+        params = {}
+        if event_type:
+            params["type"] = event_type
+        if event_status:
+            params["status"] = event_status
+
+        count = 0
+        async for p in self.api.batch_fetch(f"/drivers/{self.id}/billing-events", params=params):
+            if max_records:
+                if count >= max_records:
+                    break
+            yield models.policy.BillingEvent(api=self.api, **p)
+            count += 1
 
     # fleets
 
@@ -306,7 +380,7 @@ class Driver(models.custom.PrivateAPIHandler, models.risk.CommonRisk):
         return fleets
 
     # policies
-    async def vehicle_policies(self, vehicle_id: str) -> List['models.policy.Policy']:
+    async def list_vehicle_policies(self, vehicle_id: str) -> List['models.policy.Policy']:
         """List policies for this driver.
 
         Returns:
@@ -366,17 +440,17 @@ class Driver(models.custom.PrivateAPIHandler, models.risk.CommonRisk):
         api = self.api
         self.__init__(
             **(await self.api.request("GET",
-                               f"/drivers/{self.id}",
-                               params={
-                                   "risk": True,
-                                   "address": True,
-                                   "fleets": True,
-                                   "files": True,
-                                   "contact": True,
-                                   "occupation": True,
-                                   "points": True,
-                                   "policies": True
-                               })),
+                                      f"/drivers/{self.id}",
+                                      params={
+                                          "risk": True,
+                                          "address": True,
+                                          "fleets": True,
+                                          "files": True,
+                                          "contact": True,
+                                          "occupation": True,
+                                          "points": True,
+                                          "policies": True
+                                      })),
             api=api
         )
 

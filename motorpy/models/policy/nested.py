@@ -1,3 +1,4 @@
+from datetime import datetime
 from pydantic import Field
 from typing import Optional
 
@@ -147,6 +148,7 @@ class Policy(PolicyBase):
             and self.is_driver_agreed()
         )
 
+    @property
     def rate_per_km(self) -> Optional[float]:
         """
         The rate per km for the policy.
@@ -158,11 +160,85 @@ class Policy(PolicyBase):
             return None
         return self.final.final_rates.final_rates_value
 
+    @property
+    def rate_per_mile(self) -> Optional[float]:
+        """
+        The rate per mile for the policy.
+
+        Returns:
+            The rate per mile for the policy. None, if rates do not apply to the policy.
+        """
+        if not self.rates.rates_active:
+            return None
+        return self.final.final_rates.final_rates_value * 1.60934
+
+    @property
     def premium_amount(self) -> float:
         """
         The premium amount for the policy.
         """
-        return self.final.final_base_premium.base_premium_value
+        return self.final.final_base_premium.final_base_premium_value
+
+    async def driver_approve(self, refresh=True) -> None:
+        """
+        Approve the the policy on behalf of the driver.
+
+        Args:
+            refresh: Refresh the policy after approval.
+        """
+        self._check_id()
+
+        body = {
+            "driver": {
+                "agreedAt": datetime.utcnow().isoformat()
+            }
+        }
+
+        await self.api.request("PATCH", f"policies/{self.id}", body=body)
+        if refresh:
+            await self.refresh()
+    
+    async def internal_approve(self, refresh=True, approved_by_id: str = None) -> None:
+        """
+        Approve the the policy internally.
+
+        Args:
+            refresh: Refresh the policy after approval.
+        """
+        self._check_id()
+
+        body = {
+            "approval": {
+                "approvedAt": datetime.utcnow().isoformat()
+            }
+        }
+        if approved_by_id:
+            body["approval"]["approvedBy"] = approved_by_id
+
+        await self.api.request("PATCH", f"policies/{self.id}", body=body)
+        if refresh:
+            await self.refresh()
+    
+    async def cancel(self, refresh=True, message: str = None) -> None:
+        """
+        Cancel the policy.
+
+        Args:
+            refresh: Refresh the policy after cancellation.
+        """
+        self._check_id()
+
+        body = {
+            "cancellation": {
+                "cancelledAt": datetime.utcnow().isoformat()
+            }
+        }
+        if message:
+            body["cancellation"]["message"] = message
+
+        await self.api.request("PATCH", f"policies/{self.id}", body=body)
+        if refresh:
+            await self.refresh()
 
     def _check_id(self) -> None:
         if not self.id:
@@ -300,12 +376,12 @@ class Policy(PolicyBase):
             params["vehicleId"] = vehicle_id
 
         res = await api_handler.request("POST",
-                                  f"policy/{record_id}",
-                                  params=params,
-                                  data=self.dict(
-                                      by_alias=True,
-                                      exclude_unset=True
-                                  ))
+                                        f"policy/{record_id}",
+                                        params=params,
+                                        data=self.dict(
+                                            by_alias=True,
+                                            exclude_unset=True
+                                        ))
         # reset with the new policy created by the API
         self.__init__(api=api_handler, **res)
         return self

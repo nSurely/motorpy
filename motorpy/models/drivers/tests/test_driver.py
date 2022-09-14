@@ -1,4 +1,4 @@
-import models
+from motorpy import models
 import uuid
 from datetime import datetime, date
 

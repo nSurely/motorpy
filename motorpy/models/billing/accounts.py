@@ -5,7 +5,7 @@ from datetime import date, datetime
 
 
 class Card(BaseModel):
-    card_name: Optional[constr(strip_whitespace=True, min_length=1)] = Field(
+    name: Optional[constr(strip_whitespace=True, min_length=1)] = Field(
         default=None,
         alias="name",
         description="""
@@ -13,7 +13,7 @@ The name of the cardholder.
 
 > This data is retained."""
     )
-    card_number: Optional[PaymentCardNumber] = Field(
+    number: Optional[PaymentCardNumber] = Field(
         default=None,
         alias="number",
         description="""
@@ -22,7 +22,7 @@ The card number, as a string of digits.
 > This data is deleted after 3 hours.
 """
     )
-    card_expiry: Optional[date] = Field(
+    expiry: Optional[date] = Field(
         default=None,
         alias="exp",
         description="""
@@ -31,7 +31,7 @@ Expiration date of the card.
 > This data is deleted after 3 hours.
 """
     )
-    card_cvv: Optional[constr(strip_whitespace=True, min_length=3, max_length=4)] = Field(
+    cvv: Optional[constr(strip_whitespace=True, min_length=3, max_length=4)] = Field(
         default=None,
         alias="cvv",
         description="""
@@ -40,7 +40,7 @@ The CVV code, as a string of digits.
 > This data is deleted after 3 hours.
 """
     )
-    card_last_four: Optional[constr(strip_whitespace=True, min_length=4, max_length=4)] = Field(
+    last_four: Optional[constr(strip_whitespace=True, min_length=4, max_length=4)] = Field(
         default=None,
         alias="lastFour",
         description="""
@@ -49,7 +49,7 @@ The last four digits of the card number. This is set from the card number when t
 > This data is retained.
 """
     )
-    card_added_at: Optional[datetime] = Field(
+    added_at: Optional[datetime] = Field(
         default_factory=datetime.utcnow,
         alias="updatedAt",
         description="""
@@ -58,7 +58,7 @@ The date and time the card was added/updated.
 > This data is retained.
 """
     )
-    card_third_party_id: Optional[constr(max_length=256)] = Field(
+    third_party_id: Optional[constr(max_length=256)] = Field(
         default=None,
         alias="thirdPartyId",
         description="""
@@ -72,7 +72,7 @@ The third party identifier for the card.
 class BillingAccount(models.PrivateAPIHandler):
     # identifiers
     id: str = Field(
-        ...,
+        None,
         description="The billing account's unique ID.",
     )
     external_id: Optional[str] = Field(
@@ -152,7 +152,7 @@ class BillingAccount(models.PrivateAPIHandler):
 
     class Config:
         allow_population_by_field_name = True
-    
+
     def get_display(self) -> str:
         "A simple display string to identify the model to the user."
         if not self.card:

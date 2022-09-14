@@ -1,5 +1,5 @@
 import time
-from api import APIHandler
+from motorpy.api import APIHandler
 from typing import List
 
 

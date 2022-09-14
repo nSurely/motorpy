@@ -1,4 +1,4 @@
-from models.fleets import Fleet
+from motorpy.models.fleets import Fleet
 import uuid
 
 
