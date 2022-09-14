@@ -29,7 +29,7 @@ jobs:
         run: |
           rm -r ./docs-repo/python
           mkdir ./docs-repo/python
-          mv ./docs/pdoc/* ./docs-repo/python/
+          mv ./docs/pdoc/motorpy/* ./docs-repo/python/
 
       - name: Commit and push changes to motor-sdk-docs
         env:
