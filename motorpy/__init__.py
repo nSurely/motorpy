@@ -1,14 +1,14 @@
 # docs config
 __pdoc__ = {
-    "tests": False,
-    "actions": False,
-    "api": False,
-    "util": False,
-    "models.billing.tests": False,
-    "models.drivers.tests": False,
-    "models.fleets.tests": False,
-    "models.policy.tests": False,
-    "models.policy.tests": False
+    "motorpy.tests": False,
+    "motorpy.actions": False,
+    "motorpy.api": False,
+    "motorpy.util": False,
+    "motorpy.models.billing.tests": False,
+    "motorpy.models.drivers.tests": False,
+    "motorpy.models.fleets.tests": False,
+    "motorpy.models.policy.tests": False,
+    "motorpy.models.policy.tests": False
 }
 
 # core class for motorpy
