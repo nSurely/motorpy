@@ -1,8 +1,77 @@
 """
-motorpy base module.
+motorpy base module.  
 
-This is the principal module of the motorpy project.
-here you put your main classes and objects.
+This is the principal module of the motorpy project and acts as the entry point.
+
+---  
+
+## Basic Usage  
+
+```python
+import motorpy
+import asyncio
+
+async def main():
+    # with context manager
+    async with motorpy.Motor(org_id='my-org-id',
+                             region="eu-1") as motor:
+        # perform actions here...
+        org_settings = await motor.org_settings()
+        print(org_settings) # OrgSettings object
+
+if __name__ == "__main__":
+    asyncio.run(main())
+
+```
+
+### Without the context manager    
+
+```python
+import motorpy
+import asyncio
+
+
+async def main():
+    # init
+    motor = motorpy.Motor(org_id='my-org-id', region="eu-1")
+    try:
+        # perform actions here...
+        org_settings = await motor.org_settings()
+        print(org_settings)  # OrgSettings object
+    finally:
+        # remember to cleanup resources by calling close()
+        await motor.close()
+
+
+if __name__ == "__main__":
+    asyncio.run(main())
+
+```
+
+---  
+
+## Authentication
+
+```python	
+import motorpy
+import asyncio
+
+async def main():
+    # create an Auth object
+    auth = motorpy.Auth(api_key="<<my api key>>")
+
+    # pass auth to the Motor object
+    # auth is now scoped on this Motor object   
+    async with motorpy.Motor(org_id='my-org-id', auth=auth, region="eu-1") as motor:
+	    # as an example, we are iterating over drivers in the system
+	    async for driver in motor.list_drivers(max_records=10):
+		    print(driver.first_name) # John Doe
+
+if __name__ == "__main__":
+    asyncio.run(main())
+
+```
+  
 """
 import asyncio
 import sys
@@ -40,7 +109,6 @@ class Motor(drivers.Drivers,
                  auth: Auth = None,
                  region: str = None,
                  url: str = None) -> None:
-
         self.org_id = org_id
         self.auth = auth
         self.region = region
@@ -76,7 +144,7 @@ class Motor(drivers.Drivers,
             await self.api.refresh_org_data()
         return self.api.org_data
 
-    async def language(self):
+    async def language(self) -> str:
         """Get the organization language.
 
         Returns:
@@ -86,7 +154,7 @@ class Motor(drivers.Drivers,
             return self.api.org_data.default_lang
         return await self.org_settings().default_lang
 
-    async def org_name(self):
+    async def org_name(self) -> str:
         """Get the organization name.
 
         Returns:
@@ -102,7 +170,7 @@ class Motor(drivers.Drivers,
                       data: Union[dict, list] = None,
                       params: dict = None,
                       headers: dict = None) -> Union[dict, list]:
-        """Make a request to the API.
+        """Make a request directly to the API.
 
         Args:
             method (str): the HTTP method.
