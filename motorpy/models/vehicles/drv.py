@@ -99,7 +99,7 @@ class DriverVehicle(PrivateAPIHandler, CommonRisk):
 
     class Config:
         anystr_strip_whitespace = True
-    
+
     def get_display(self) -> str:
         "A simple display string to identify the model to the user."
         if self.vehicle:
@@ -116,12 +116,16 @@ class DriverVehicle(PrivateAPIHandler, CommonRisk):
         """
         return self.source_id
 
-    async def list_policies(self, loose_match: bool = True, is_active_policy: bool = None) -> Generator['models.policies.Policy', None, None]:
+    async def list_policies(self,
+                            loose_match: bool = True,
+                            is_active_policy: bool = None,
+                            max_records: int = None) -> Generator['models.policies.Policy', None, None]:
         """List policies for this vehicle.
 
         Args:
             loose_match: If True, will match on the DRV ID and the vehicle ID.
             is_active_policy (bool, optional): if True, will return only active policies. Defaults to None.
+            max_records (int, optional): maximum number of records to return. Defaults to None.
 
         Returns:
             Generator[Policy]: policies
@@ -133,9 +137,15 @@ class DriverVehicle(PrivateAPIHandler, CommonRisk):
             params["rvIds"] = self.vehicle.id
         if is_active_policy is not None:
             params["isActivePolicy"] = is_active_policy
+        
+        count = 0
 
         async for p in self.api.batch_fetch(f"policy", params=params):
+            if max_records is not None:
+                if count >= max_records:
+                    break
             yield models.policies.Policy(api=self.api, **p)
+            count += 1
 
     async def create_policy(self, policy: 'models.policies.Policy' = None) -> 'models.policies.Policy':
         """Create a policy for this driver.
@@ -167,7 +177,7 @@ class DriverVehicle(PrivateAPIHandler, CommonRisk):
         driver_id = self.driver_id
         self.__init__(
             **(await self.api.request("GET",
-                               f"/drivers/{self.driver_id}/vehicles/{self.id}")),
+                                      f"/drivers/{self.driver_id}/vehicles/{self.id}")),
             api=api,
             driver_id=driver_id
         )
