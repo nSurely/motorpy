@@ -13,7 +13,7 @@ class Driver(models.custom.PrivateAPIHandler, models.risk.CommonRisk):
     """
     # identifiers
     id: str = Field(
-        ...,
+        None,
         description="The driver's unique ID.",
     )
     source_id: Optional[str] = Field(

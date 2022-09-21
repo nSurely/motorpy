@@ -13,7 +13,7 @@ class Fleet(models.PrivateAPIHandler):
     """
     Fleet model
     """
-    id: str = Field(default=...)
+    id: str = Field(default=None)
     external_id: Optional[str] = Field(
         default=None,
         alias="externalId"
