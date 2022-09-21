@@ -295,31 +295,36 @@ class Fleet(models.PrivateAPIHandler):
 
     async def update_driver(self,
                             driver_id: str,
-                            is_vehicle_manager: bool = False,
-                            is_driver_manager: bool = False,
-                            is_billing_manager: bool = False,
+                            is_vehicle_manager: bool = None,
+                            is_driver_manager: bool = None,
+                            is_billing_manager: bool = None,
                             expires_at: datetime = None,
                             is_active: bool = True) -> FleetDriver:
         """Update a driver assignment
 
         Args:
             driver_id (str): the driver ID
-            is_vehicle_manager (bool, optional): can manage vehicles. Defaults to False.
-            is_driver_manager (bool, optional): can manage drivers. Defaults to False.
-            is_billing_manager (bool, optional): can manage billing details. Defaults to False.
-            expires_at (datetime, optional): if and when the driver assignment expires. Defaults to None.
-            is_active (bool, optional): if active in the fleet. Defaults to True.
+            is_vehicle_manager (bool, optional): can manage vehicles (Ignored if None). Defaults to False.
+            is_driver_manager (bool, optional): can manage drivers (Ignored if None). Defaults to False.
+            is_billing_manager (bool, optional): can manage billing details (Ignored if None). Defaults to False.
+            expires_at (datetime, optional): if and when the driver assignment expires (Ignored if None). Defaults to None.
+            is_active (bool, optional): if active in the fleet (Ignored if None). Defaults to True.
 
         Returns:
             dict: the API response
         """
         data = {
-            "isVehicleManager": is_vehicle_manager,
-            "isDriverManager": is_driver_manager,
-            "isBillingManager": is_billing_manager,
-            "expiresAt": expires_at.isoformat() if expires_at else None,
-            "isActive": is_active
+            "expiresAt": expires_at.isoformat() if expires_at else None
         }
+        if is_vehicle_manager is not None:
+            data["isVehicleManager"] = is_vehicle_manager
+        if is_driver_manager is not None:
+            data["isDriverManager"] = is_driver_manager
+        if is_billing_manager is not None:
+            data["isBillingManager"] = is_billing_manager
+        if is_active is not None:
+            data["isActive"] = is_active
+        
         return FleetDriver(api=self.api, **(await self.api.request(
             "PATCH",
             f"/fleets/{self.id}/drivers/{driver_id}",
