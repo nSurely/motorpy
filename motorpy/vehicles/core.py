@@ -72,3 +72,35 @@ class Vehicles:
             model: models.Vehicle = models.Vehicle(**vehicle, api=self.api)
             yield model
             count += 1
+
+    async def create_vehicle(self, vehicle: models.Vehicle, driver_id: str = None, drv: models.DriverVehicle = None, send_webhook: bool = True) -> models.Vehicle:
+        """Create a new vehicle.
+
+        Args:
+            vehicle (models.Vehicle): the vehicle model.
+
+        Returns:
+            models.Vehicle: the created vehicle model.
+        """
+        raw = await self.api.request("POST", 
+        "registered-vehicles", 
+        json=vehicle.dict(exclude_unset=True),
+        params={
+            "webhook": "t" if send_webhook else "f"
+        })
+
+        rv: models.Vehicle = models.Vehicle(**raw, api=self.api)
+
+        # create a DRV
+        try:
+            if driver_id:
+                if not drv:
+                    await rv.add_driver(driver_id, display_name=rv.get_display(), is_owner=True, is_primary_driver=True)
+                else:
+                    await rv.add_drv(driver_id, drv)
+        except Exception as e:
+            # rollback
+            await self.api.request("DELETE", f"registered-vehicles/{rv.id}")
+            raise e
+
+        return rv

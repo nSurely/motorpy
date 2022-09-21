@@ -133,8 +133,8 @@ class Drivers:
 
         driver_resp = await self.api.request(
             "POST", f"drivers", data=data, params={
-                "webhook": send_webhook,
-                "invite": send_invite
+                "webhook": "t" if send_webhook else "f",
+                "invite": "t" if send_invite else "f"
             }
         )
         return models.Driver(**driver_resp, api=self.api)

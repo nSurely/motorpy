@@ -98,6 +98,7 @@ class DriverVehicle(PrivateAPIHandler, CommonRisk):
     )
 
     class Config:
+        allow_population_by_field_name = True
         anystr_strip_whitespace = True
 
     def get_display(self) -> str:
@@ -162,6 +163,22 @@ class DriverVehicle(PrivateAPIHandler, CommonRisk):
         return await policy.create(
             api_handler=self.api,
             record_id=self.id,
+        )
+
+    async def create(self, driver_id: str) -> 'models.vehicles.DriverVehicle':
+        """Create a DRV.
+
+        Args:
+            driver_id (str): driver ID
+            drv (DriverVehicle): DRV to create
+
+        Returns:
+            DriverVehicle: created DRV
+        """
+        return await self.api.request(
+            method="POST",
+            url=f"driver/{driver_id}/vehicles",
+            json=self.dict(by_alias=True)
         )
 
     def _check_id(self) -> None:

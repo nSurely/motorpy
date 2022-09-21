@@ -45,3 +45,20 @@ class Fleets:
             model.api = self.api
             yield model
             count += 1
+    
+    async def create_fleet(self, fleet: models.Fleet) -> models.Fleet:
+        """Create a new fleet.
+
+        Args:
+            fleet (models.Fleet): the fleet model.
+
+        Returns:
+            models.Fleet: the created fleet model.
+        """
+        raw = await self.api.request("POST", "fleets", json=fleet.dict(exclude_unset=True))
+
+        model: models.Fleet = models.Fleet(**raw)
+
+        model.api = self.api
+
+        return model

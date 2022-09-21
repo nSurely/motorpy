@@ -235,6 +235,41 @@ class Vehicle(PrivateAPIHandler, CommonRisk):
             record_id=self.id,
         )
     
+    async def add_drv(self, driver_id: str, drv: 'models.vehicles.DriverVehicle') -> 'models.vehicles.DriverVehicle':
+        """Add a driver to this vehicle.
+
+        Args:
+            driver_id (str): driver ID
+            drv (DriverVehicle): driver vehicle to add
+
+        Returns:
+            DriverVehicle: added driver vehicle
+        """
+        if not drv.api:
+            drv.api = self.api
+        return await drv.create(driver_id)
+
+    
+    async def add_driver(self, driver_id: str, display_name: str, is_owner: bool, is_primary_driver: bool) -> 'models.vehicles.DriverVehicle':
+        """Add a driver to this vehicle.
+
+        Args:
+            driver_id (str): driver ID
+            display_name (str): display name
+            is_owner (bool): is owner
+            is_primary_driver (bool): is primary driver
+
+        Returns:
+            DriverVehicle: added driver vehicle
+        """
+        drv = models.vehicles.DriverVehicle(
+            api=self.api,
+            display_name=display_name,
+            is_owner=is_owner,
+            is_primary_driver=is_primary_driver
+        )
+        return await self.add_drv(driver_id, drv)
+    
     def _check_id(self) -> None:
         if not self.id:
             raise ValueError("id must be set.")
