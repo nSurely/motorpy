@@ -101,3 +101,40 @@ class Drivers:
             yield model
             count += 1
             await asyncio.sleep(0.0)
+
+    async def create_driver(self,
+                            driver: models.Driver,
+                            password: str = None,
+                            send_invite: bool = False,
+                            send_webhook: bool = True) -> models.Driver:
+        """Create a new driver.
+        If you would like to perform actions as this driver, you may need to login as the driver with a new motor and auth object.
+
+        Note: the python SDK does not recommend using the JWT auth, so an API key should work fine as is.
+
+        Args:
+            driver (models.Driver): the driver model to create.
+            password (str): the password for the driver, if invite is False. Defaults to None.
+            send_invite (bool, optional): whether to send an invite email (password must be None if True). Defaults to False.
+            send_webhook (bool, optional): whether to send a webhook. Defaults to True.
+
+        Returns:
+            models.Driver: the new driver model.
+        """
+        data = driver.dict(exclude_unset=True)
+        if password is None and not send_invite:
+            raise ValueError("You must provide a password if invite is False.")
+        if password is not None and send_invite:
+            raise ValueError(
+                "You cannot provide a password if invite is True.")
+
+        if password is not None:
+            data['password'] = password
+
+        driver_resp = await self.api.request(
+            "POST", f"drivers", data=data, params={
+                "webhook": send_webhook,
+                "invite": send_invite
+            }
+        )
+        return models.Driver(**driver_resp, api=self.api)
