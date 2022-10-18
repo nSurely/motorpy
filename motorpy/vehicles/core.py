@@ -12,7 +12,7 @@ class Vehicles:
                     vehicle_id: str,
                     include_translations: bool = True,
                     include_distance: bool = False,
-                    include_drv_count: bool = False) -> dict:
+                    include_drv_count: bool = False) -> models.Vehicle:
         """Get a registered vehicle record.
 
         Args:
@@ -30,7 +30,7 @@ class Vehicles:
         params['distance3m'] = 't' if include_distance else 'f'
         params['totalDrvCount'] = 't' if include_drv_count else 'f'
 
-        return await self.api.request("GET", f"registered-vehicles/{vehicle_id}", params=params)
+        return models.Vehicle(api=self.api, **(await self.api.request("GET", f"registered-vehicles/{vehicle_id}", params=params)))
 
     async def list_vehicles(self,
                       reg_plate: str = None,
@@ -38,7 +38,7 @@ class Vehicles:
                       is_active: bool = None,
                       is_approved: bool = None,
                       full_response: bool = True,
-                      max_records: int = None) -> Generator[dict, None, None]:
+                      max_records: int = None) -> Generator[models.Vehicle, None, None]:
         """Search for registered vehicles.
 
         Args:
