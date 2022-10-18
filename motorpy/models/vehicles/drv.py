@@ -116,6 +116,17 @@ class DriverVehicle(PrivateAPIHandler, CommonRisk):
             str: telematics ID
         """
         return self.source_id
+    
+    async def get_vehicle(self) -> 'models.vehicles.Vehicle':
+        """Get the vehicle associated with this DRV.
+
+        Returns:
+            Vehicle: vehicle
+        """
+        return models.vehicles.Vehicle(api=self.api, **(await self.api.request(
+            method="GET",
+            url=f"registered-vehicle/{self.vehicle.id}"
+        )))
 
     async def list_policies(self,
                             loose_match: bool = True,

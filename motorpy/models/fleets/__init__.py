@@ -378,8 +378,8 @@ class Fleet(models.PrivateAPIHandler):
 
     async def update_vehicle(self,
                        vehicle_id: str,
-                       is_active: bool = True,
-                       is_open_to_all: bool = True) -> FleetVehicle:
+                       is_active: bool = None,
+                       is_open_to_all: bool = None) -> FleetVehicle:
         """Update a vehicle assignment
 
         Args:
@@ -390,10 +390,15 @@ class Fleet(models.PrivateAPIHandler):
         Returns:
             dict: the API response
         """
-        data = {
-            "isActive": is_active,
-            "isOpenToAll": is_open_to_all
-        }
+        data = {}
+        if is_active is not None:
+            data["isActive"] = is_active
+        if is_open_to_all is not None:
+            data["isOpenToAll"] = is_open_to_all
+        
+        if not data:
+            raise ValueError("is_active or is_open_to_all must be specified")
+        
         return FleetVehicle(api=self.api, **(await self.api.request(
             "PATCH",
             f"/fleets/{self.id}/vehicles/{vehicle_id}",
