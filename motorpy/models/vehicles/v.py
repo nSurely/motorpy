@@ -3,6 +3,7 @@ from typing import Optional
 from motorpy.models import PrivateAPIHandler
 from datetime import date
 from enum import Enum
+from motorpy.models.risk import CommonRisk
 
 
 class VehicleCategory(str, Enum):
@@ -25,7 +26,7 @@ class VehicleCategory(str, Enum):
     MISC = "misc"
 
 
-class VehicleType(PrivateAPIHandler):
+class VehicleType(PrivateAPIHandler, CommonRisk):
     id: str = Field(default=None)
     external_id: Optional[str] = Field(
         default=None,
