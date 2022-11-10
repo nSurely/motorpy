@@ -1,8 +1,9 @@
 from motorpy.models import PrivateAPIHandler
 from motorpy.models.billing.accounts import BillingAccount
 from pydantic import Field
-from typing import Optional, Literal
+from typing import Optional
 from datetime import datetime
+from enum import Enum
 
 STATUS = {
     'pending',
@@ -12,19 +13,20 @@ STATUS = {
     'confirmed'
 }
 
-BillingEventStatus = Literal[
-    'pending',
-    'paid',
-    'failed',
-    'cancelled',
-    'confirmed'
-]
 
-BillingEventType = Literal[
-    'other',
-    'rates',
-    'base_premium'
-]
+class BillingEventStatus(str, Enum):
+    pending = 'pending'
+    paid = 'paid'
+    failed = 'failed'
+    cancelled = 'cancelled'
+    confirmed = 'confirmed'
+
+
+class BillingEventType(str, Enum):
+    other = 'other'
+    rates = 'rates'
+    base_premium = 'base_premium'
+
 
 class BillingEvent(PrivateAPIHandler):
     # identifiers

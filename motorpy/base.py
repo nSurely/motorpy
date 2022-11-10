@@ -106,9 +106,9 @@ class Motor(drivers.Drivers,
 
     def __init__(self,
                  org_id: str,
-                 auth: Auth = None,
-                 region: str = None,
-                 url: str = None) -> None:
+                 auth: Optional[Auth] = None,
+                 region: Optional[str] = None,
+                 url: Optional[str] = None) -> None:
         self.org_id = org_id
         self.auth = auth
         self.region = region
@@ -144,7 +144,7 @@ class Motor(drivers.Drivers,
             await self.api.refresh_org_data()
         return self.api.org_data
 
-    async def language(self) -> str:
+    async def language(self) -> Optional[str]:
         """Get the organization language.
 
         Returns:
@@ -155,7 +155,7 @@ class Motor(drivers.Drivers,
         o: OrgSettings = await self.org_settings()
         return o.default_lang
 
-    async def org_name(self) -> str:
+    async def org_name(self) -> Optional[str]:
         """Get the organization name.
 
         Returns:
@@ -169,7 +169,7 @@ class Motor(drivers.Drivers,
     async def request(self,
                       method: str,
                       path: str,
-                      data: Union[dict, list] = None,
+                      data: Optional[Union[dict, list]] = None,
                       params: dict = None,
                       headers: dict = None) -> Optional[Union[dict, list]]:
         """Make a request directly to the API.
