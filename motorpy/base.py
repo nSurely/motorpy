@@ -75,7 +75,7 @@ if __name__ == "__main__":
 """
 import asyncio
 import sys
-from typing import Union
+from typing import Union, Optional
 import motorpy.drivers as drivers
 import motorpy.vehicles as vehicles
 import motorpy.fleets as fleets
@@ -152,7 +152,8 @@ class Motor(drivers.Drivers,
         """
         if self.api.org_data:
             return self.api.org_data.default_lang
-        return await self.org_settings().default_lang
+        o: OrgSettings = await self.org_settings()
+        return o.default_lang
 
     async def org_name(self) -> str:
         """Get the organization name.
@@ -162,14 +163,15 @@ class Motor(drivers.Drivers,
         """
         if self.api.org_data:
             return self.api.org_data.display_name
-        return await self.org_settings().display_name
+        o: OrgSettings = await self.org_settings()
+        return o.display_name
 
     async def request(self,
                       method: str,
                       path: str,
                       data: Union[dict, list] = None,
                       params: dict = None,
-                      headers: dict = None) -> Union[dict, list]:
+                      headers: dict = None) -> Optional[Union[dict, list]]:
         """Make a request directly to the API.
 
         Args:
@@ -180,7 +182,7 @@ class Motor(drivers.Drivers,
             headers (dict): the headers.
 
         Returns:
-            Union[dict, list]: the API body response.
+            Optional[Union[dict, list]]: the API body response.
         """
         if not path.startswith("/"):
             path = f"/{path}"
