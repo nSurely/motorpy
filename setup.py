@@ -32,11 +32,11 @@ def read_requirements(path):
 setup(
     name="motorpy",
     version=read("motorpy", "VERSION"),
-    description="Awesome motorpy created by nSurely",
+    description="Inaza Motor Python SDK",
     url="https://github.com/nSurely/motorpy/",
     long_description=read("README.md"),
     long_description_content_type="text/markdown",
-    author="nSurely",
+    author="Inaza",
     packages=find_packages(exclude=["tests", ".github"]),
     install_requires=read_requirements("requirements.txt"),
     entry_points={
