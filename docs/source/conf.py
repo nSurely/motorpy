@@ -23,7 +23,7 @@ copyright = '2022, Inaza'
 author = 'Inaza'
 
 # The full version, including alpha/beta/rc tags
-release = '0.1.3-beta'
+release = '0.1.4-beta'
 
 
 # -- General configuration ---------------------------------------------------
