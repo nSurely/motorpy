@@ -4,7 +4,7 @@ from motorpy.auth import Auth
 
 from .exceptions import APIError, APIAuthError
 from .org import OrgSettings
-from typing import Generator, List, Optional, Tuple
+from typing import Generator, List, Optional, Tuple, Union
 
 
 async def _make_request(session: aiohttp.ClientSession,
@@ -85,7 +85,7 @@ class APIHandlerNoAuth:
                       params: dict = None,
                       data: dict = None,
                       headers: dict = None,
-                      url_override: str = None) -> Optional[dict]:
+                      url_override: str = None) -> Optional[Union[dict, list]]:
         """Make a request to the API.
 
         Args:
@@ -100,7 +100,7 @@ class APIHandlerNoAuth:
             APIError: an API error occurred.
 
         Returns:
-            Optional[dict]: response body if supplied.
+            Optional[Union[dict, list]]: response body if supplied.
         """
         if self.org_data is None and not self._org_data_refreshing:
             self.refresh_org_data()
@@ -165,7 +165,7 @@ class APIHandler(APIHandlerNoAuth):
 
         super().__init__(org_id, region, url, timeout)
 
-    async def _make_request(self, method: str, url: str, **kwargs) -> Tuple[Optional[dict], int]:
+    async def _make_request(self, method: str, url: str, **kwargs) -> Tuple[Optional[Union[dict, list]], int]:
         if self.auth.requires_refresh():
             self.auth.refresh()
 
@@ -204,7 +204,7 @@ class APIHandler(APIHandlerNoAuth):
                       params: dict = None,
                       data: dict = None,
                       headers: dict = None,
-                      url_override: str = None) -> dict:
+                      url_override: str = None) -> Optional[Union[dict, list]]:
         """Make a request to the API.
 
         Args:
