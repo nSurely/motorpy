@@ -27,7 +27,7 @@ class JWTAuth(JWTAuthBase):
         self.expires_in: int = None
         self.refresh_token: str = None
         # mins
-        self.refresh_token_expires_in: int = None
+        self.refresh_expires_in: int = None
 
         # user or driver ID
         self.account_id: str = None
@@ -104,7 +104,7 @@ class JWTAuth(JWTAuthBase):
         self.access_token = token_vals["accessToken"]
         self.expires_in = token_vals["expiresIn"]
         self.refresh_token = token_vals["refreshToken"]
-        self.refresh_token_expires_in = token_vals["refreshTokenExpiresIn"]
+        self.refresh_expires_in = token_vals["refreshExpiresIn"]
         self.account_id = token_vals["accountId"]
         self.account_type = token_vals["accountType"]
 
@@ -126,7 +126,7 @@ class JWTAuth(JWTAuthBase):
             self.access_token = None
             self.expires_in = None
             self.refresh_token = None
-            self.refresh_token_expires_in = None
+            self.refresh_expires_in = None
             self.last_refresh_time = None
             return True
         return False
@@ -147,7 +147,7 @@ class JWTAuth(JWTAuthBase):
         self.access_token = token_vals["accessToken"]
         self.expires_in = token_vals["expiresIn"]
         self.refresh_token = token_vals["refreshToken"]
-        self.refresh_token_expires_in = token_vals["refreshTokenExpiresIn"]
+        self.refresh_expires_in = token_vals["refreshExpiresIn"]
         self.last_refresh_time = time.time()
 
     def get_token(self) -> str:
