@@ -7,7 +7,7 @@ from setuptools import find_packages, setup
 def read(*paths, **kwargs):
     """Read the contents of a text file safely.
     >>> read("motorpy", "VERSION")
-    '0.1.3-beta'
+    '0.1.5-beta'
     >>> read("README.md")
     ...
     """
