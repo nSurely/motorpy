@@ -100,6 +100,7 @@ class Vehicles:
         if not vehicle.vehicle_type.id:
             raise ValueError("Vehicle type ID is required")
 
+        # Create the registered vehicle
         raw = await self.api.request("POST",
                                      "registered-vehicles",
                                      json={
@@ -112,7 +113,7 @@ class Vehicles:
 
         rv: models.Vehicle = models.Vehicle(**raw, api=self.api)
 
-        # create a DRV
+        # create a DRV (optional assignment to driver)
         try:
             if driver_id:
                 if not drv:

@@ -176,20 +176,38 @@ class DriverVehicle(PrivateAPIHandler, CommonRisk):
             record_id=self.id,
         )
 
-    async def create(self, driver_id: str) -> 'models.vehicles.DriverVehicle':
+    async def create(self, driver_id: str, vehicle_id: str = None, vehicle: 'models.vehicles.Vehicle' = None) -> 'models.vehicles.DriverVehicle':
         """Create a DRV.
 
         Args:
             driver_id (str): driver ID
-            drv (DriverVehicle): DRV to create
+            vehicle_id (str, optional): vehicle ID to assign the driver to. Defaults to None.
+            vehicle (Vehicle, optional): vehicle model if a new vehicle is to be created. Defaults to None.
+        
+        Note:
+            Either vehicle_id or vehicle must be provided, but not both.
 
         Returns:
             DriverVehicle: created DRV
         """
+        if vehicle_id and vehicle:
+            raise ValueError("You can only specify one of vehicle_id or vehicle")
+        if vehicle_id is None and vehicle is None:
+            raise ValueError("You must specify either vehicle_id or vehicle")
+        
+        # the DRV body
+        body = self.dict(by_alias=True, exclude_unset=True)
+
+        if vehicle_id:
+            body["registeredVehicleId"] = vehicle_id
+        
+        if vehicle:
+            body["registeredVehicle"] = vehicle.dict(by_alias=True, exclude_unset=True)
+
         return await self.api.request(
             method="POST",
             url=f"driver/{driver_id}/vehicles",
-            json=self.dict(by_alias=True)
+            json=body
         )
 
     def _check_id(self) -> None:

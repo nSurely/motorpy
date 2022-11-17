@@ -247,7 +247,7 @@ class Vehicle(PrivateAPIHandler, CommonRisk):
         """
         if not drv.api:
             drv.api = self.api
-        return await drv.create(driver_id)
+        return await drv.create(driver_id, vehicle_id=self.id)
 
     
     async def add_driver(self, driver_id: str, display_name: str, is_owner: bool, is_primary_driver: bool) -> 'models.vehicles.DriverVehicle':
