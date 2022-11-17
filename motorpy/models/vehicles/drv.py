@@ -195,6 +195,9 @@ class DriverVehicle(PrivateAPIHandler, CommonRisk):
         if vehicle_id is None and vehicle is None:
             raise ValueError("You must specify either vehicle_id or vehicle")
         
+        if vehicle_id and self.is_owner:
+            raise ValueError("You cannot specify an existing vehicle ID if the driver is the owner of the vehicle. The owner should create the vehicle first.")
+        
         # the DRV body
         body = self.dict(by_alias=True, exclude_unset=True)
 
