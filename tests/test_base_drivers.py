@@ -31,7 +31,6 @@ class TestBaseDrivers:
         driver = await client.get_driver(drivers[0].id)
         assert driver.id == drivers[0].id
     
-    @pytest.skip("Not implemented")
     async def test_create_driver(self, client: motorpy.Motor):
         new_driver = motorpy.Driver(
             first_name="John",
