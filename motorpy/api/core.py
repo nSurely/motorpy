@@ -40,13 +40,8 @@ class APIHandlerNoAuth:
         self.url = url
         self.timeout = timeout
 
-        # session for all requests
-        self.session = aiohttp.ClientSession(
-            timeout=aiohttp.ClientTimeout(
-                total=timeout,
-                connect=30.0
-            )
-        )
+        # should be set in async context
+        self.session: aiohttp.ClientSession = None
 
         if not self.region and not self.url:
             raise ValueError("Region or URL must be specified.")
@@ -71,6 +66,18 @@ class APIHandlerNoAuth:
 
         # check this on recursion
         self._org_data_refreshing = False
+    
+    async def _set_session(self):
+        # session for all requests
+        self.session = aiohttp.ClientSession(
+            timeout=aiohttp.ClientTimeout(
+                total=self.timeout,
+                connect=30.0
+            )
+        )
+    
+    def _session_set(self) -> bool:
+        return self.session is not None
 
     async def _loop_request(self,
                             method: str,
@@ -78,6 +85,8 @@ class APIHandlerNoAuth:
                             params: dict = None,
                             data: dict = None,
                             headers: dict = None) -> Tuple[Optional[dict], int]:
+        if not self._session_set():
+            await self._set_session()
         body, status = await _make_request(self.session,
                                            method,
                                            url,
@@ -141,7 +150,8 @@ class APIHandlerNoAuth:
 
     async def close_session(self) -> None:
         """Close the asynchronous session."""
-        await self.session.close()
+        if self._session_set():
+            await self.session.close()
 
 
 class APIHandler(APIHandlerNoAuth):
@@ -273,6 +283,9 @@ class APIHandler(APIHandlerNoAuth):
         else:
             save_loc = os.path.abspath(save_dir)
             save_loc = os.path.join(save_loc, local_filename)
+        
+        if not self._session_set():
+            await self._set_session()
 
         async with self.session.get(os.path.join(url, file_location), headers=self.auth.get_headers(), stream=True) as r:
             r.raise_for_status()
