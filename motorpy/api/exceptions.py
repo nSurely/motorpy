@@ -3,6 +3,10 @@ class APIError(Exception):
     """Base class for all API exceptions"""
 
     def __init__(self, message: str, status_code: int = 500) -> None:
+        # check if message implements __str__
+        if not hasattr(message, "__str__"):
+            message = "Unknown error - message does not implement __str__"
+        
         super().__init__(message)
 
         self.message = message
