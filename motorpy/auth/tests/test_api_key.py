@@ -42,6 +42,6 @@ class TestAPIKeyAuth:
         auth = APIKeyAuth(key='123', secret='456')
         assert not auth.requires_refresh()
 
-    def test_refresh(self):
+    async def test_refresh(self):
         auth = APIKeyAuth(key='123', secret='456')
-        auth.refresh()
+        await auth.refresh()
