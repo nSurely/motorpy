@@ -20,11 +20,13 @@ async def _make_request(session: aiohttp.ClientSession,
     async with session.request(method, url, params=params, data=data, headers=headers, timeout=timeout) as res:
         return await res.json() if await res.json() and res.status != 204 else None, res.status
 
+
 def param_str(params: dict) -> dict:
     "Calls __str__ on each value"
     if not params:
         return {}
     return {k: str(v) for k, v in params.items()}
+
 
 class APIHandlerNoAuth:
 
@@ -38,7 +40,13 @@ class APIHandlerNoAuth:
         self.url = url
         self.timeout = timeout
 
-        self.session = aiohttp.ClientSession()
+        # session for all requests
+        self.session = aiohttp.ClientSession(
+            timeout=aiohttp.ClientTimeout(
+                total=timeout,
+                connect=30.0
+            )
+        )
 
         if not self.region and not self.url:
             raise ValueError("Region or URL must be specified.")
@@ -167,7 +175,7 @@ class APIHandler(APIHandlerNoAuth):
 
     async def _make_request(self, method: str, url: str, **kwargs) -> Tuple[Optional[Union[dict, list]], int]:
         if self.auth.requires_refresh():
-            self.auth.refresh()
+            await self.auth.refresh()
 
         if 'headers' not in kwargs:
             kwargs['headers'] = {}
@@ -294,9 +302,9 @@ class APIHandler(APIHandlerNoAuth):
             Optional[dict]: response body if supplied.
         """
         body, status = await self._loop_request(
-            method, f"{self.telematics_url}/{endpoint}", 
-            params=param_str(params), 
-            data=data, 
+            method, f"{self.telematics_url}/{endpoint}",
+            params=param_str(params),
+            data=data,
             headers=headers)
 
         if status < 300:
