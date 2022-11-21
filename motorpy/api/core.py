@@ -17,8 +17,10 @@ async def _make_request(session: aiohttp.ClientSession,
     """
     Make asynchronous request to the API.
     """
-    async with session.request(method, url, params=params, data=data, headers=headers, timeout=timeout) as res:
-        return await res.json() if await res.json() and res.status != 204 else None, res.status
+    async with session.request(method, url, params=params, json=data, headers=headers, timeout=timeout) as res:
+        if res.status == 204:
+            return None, res.status
+        return await res.json() if await res.json() else None, res.status
 
 
 def param_str(params: dict) -> dict:

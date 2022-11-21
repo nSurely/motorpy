@@ -122,6 +122,7 @@ class Drivers:
             models.Driver: the new driver model.
         """
         data = driver.dict(exclude_unset=True, by_alias=True)
+
         if not data:
             raise ValueError(
                 "No data provided to create driver. first_name, last_name, and email are required.")
@@ -143,4 +144,4 @@ class Drivers:
                 "invite": "t" if send_invite else "f"
             }
         )
-        return models.Driver(**driver_resp, api=self.api)
+        return models.Driver(api=self.api, **driver_resp)

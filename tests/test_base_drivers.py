@@ -37,10 +37,10 @@ class TestBaseDrivers:
             last_name="Doe",
             email=secrets.token_hex(5) + "@example.com"
         )
-        print(new_driver.first_name)
+        # print(new_driver.first_name)
 
         # export to pydantic dict
-        driver_dict = new_driver.dict(exclude_unset=True)
+        driver_dict = new_driver.dict(exclude_unset=True, by_alias=True)
         print(driver_dict)
 
         driver = await client.create_driver(
@@ -60,6 +60,7 @@ class TestBaseDrivers:
         await driver.delete()
 
         # check driver is deleted
-        with pytest.raises(motorpy.APIError):
+        with pytest.raises(motorpy.APIError) as excinfo:
             await client.get_driver(driver_id)
+        assert excinfo.value.status_code == 404
         
