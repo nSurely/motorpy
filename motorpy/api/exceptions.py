@@ -14,18 +14,23 @@ class APIError(Exception):
     def __repr__(self) -> str:
         return f"{self.__class__.__name__}({self.status_code}, {self.message})"
 
+    @property
     def server_error(self) -> bool:
         return self.status_code >= 500
 
+    @property
     def client_error(self) -> bool:
         return self.status_code >= 400 and self.status_code < 500
 
+    @property
     def not_found(self) -> bool:
         return self.status_code == 404
 
+    @property
     def bad_request(self) -> bool:
         return self.status_code == 400
 
+    @property
     def unauthorized(self) -> bool:
         return self.status_code == 401
 
