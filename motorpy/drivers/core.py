@@ -121,7 +121,10 @@ class Drivers:
         Returns:
             models.Driver: the new driver model.
         """
-        data = driver.dict(exclude_unset=True)
+        data = driver.dict(exclude_unset=True, by_alias=True)
+        if not data:
+            raise ValueError(
+                "No data provided to create driver. first_name, last_name, and email are required.")
         if password is None and not send_invite:
             raise ValueError("You must provide a password if invite is False.")
         if password is not None and send_invite:
@@ -132,7 +135,10 @@ class Drivers:
             data['password'] = password
 
         driver_resp = await self.api.request(
-            "POST", f"drivers", data=data, params={
+            "POST",
+            "drivers",
+            data=data,
+            params={
                 "webhook": "t" if send_webhook else "f",
                 "invite": "t" if send_invite else "f"
             }
