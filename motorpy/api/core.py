@@ -187,6 +187,7 @@ class APIHandler(APIHandlerNoAuth):
 
         return await self._loop_request(method,
                                         url,
+                                        data=kwargs.get('data', None),
                                         headers=kwargs['headers'],
                                         params=kwargs.get('params', {}))
 
@@ -251,7 +252,7 @@ class APIHandler(APIHandlerNoAuth):
         if status < 300:
             return body
         else:
-            raise APIError(f"API responded with {status} - {body}")
+            raise APIError(str(body), status)
 
     async def download_file(self, url: str, file_location: str, save_dir: str = None) -> str:
         """Downloads a file to local disk.
@@ -310,7 +311,7 @@ class APIHandler(APIHandlerNoAuth):
         if status < 300:
             return body
         else:
-            raise APIError(f"API responded with {status}")
+            raise APIError(f"Telematics API Error", status)
 
     async def batch_fetch(self,
                           endpoint: str,
