@@ -1,13 +1,10 @@
 name: Run pytest
 
 on:
-  pull_request:
-    branches:
-      - master
-      - main
   push:
-    branches-ignore:
-      - '**'
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
     # branches:
     #   - dev
   # manual run (only use for dev)
