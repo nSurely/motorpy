@@ -87,4 +87,4 @@ jobs:
       - name: Install project
         run: pip install -e .[test]
       - name: run tests
-        run: pytest -s -vvvv -l --tb=long tests
+        run: pytest -s -vvvv -l --tb=long tests --orgid ${{ secrets.ORG_ID }} --apikey ${{ secrets.API_KEY }} --url ${{ secrets.URL }}
