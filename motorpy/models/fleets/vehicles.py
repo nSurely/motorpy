@@ -24,6 +24,9 @@ class FleetVehicle(models.PrivateAPIHandler):
         alias="registeredVehicle"
     )
 
+    class Config:
+        allow_population_by_field_name = True
+
     @property
     def id(self) -> Optional[str]:
         "Returns the vehicle ID if the vehicle is set"

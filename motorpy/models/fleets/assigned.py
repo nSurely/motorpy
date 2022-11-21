@@ -37,6 +37,9 @@ class FleetDriverVehicleAssignment(models.PrivateAPIHandler):
         alias="driver"
     )
 
+    class Config:
+        allow_population_by_field_name = True
+
     @property
     def id(self) -> Tuple[Optional[str], Optional[str]]:
         "Returns the driver and vehicle ID if the vehicle is set"

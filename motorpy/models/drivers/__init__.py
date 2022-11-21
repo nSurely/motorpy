@@ -292,7 +292,7 @@ class Driver(models.custom.PrivateAPIHandler, models.risk.CommonRisk):
             primary_only=True)
         # make another request for the full account details
         return await self.get_billing_account(res[0].id) if res else None
-    
+
     async def create_billing_account(self, account: models.billing.BillingAccount) -> models.billing.BillingAccount:
         """Create a billing account for this driver.
 
@@ -341,7 +341,7 @@ class Driver(models.custom.PrivateAPIHandler, models.risk.CommonRisk):
 
     async def list_charges(self, event_type: BillingEventType = None, event_status: BillingEventStatus = None, max_records: int = None) -> Generator[BillingEvent, None, None]:
         """List all charges for this driver.
-        
+
         Args:
             event_type (BillingEventType, optional): filter by type. Defaults to None.
             event_status (BillingEventStatus, optional): filter by status. Defaults to None.
@@ -565,6 +565,9 @@ class Driver(models.custom.PrivateAPIHandler, models.risk.CommonRisk):
         if not assets:
             return None
         return assets[0].source_id
+
+    class Config:
+        allow_population_by_field_name = True
 
 
 Driver.update_forward_refs()

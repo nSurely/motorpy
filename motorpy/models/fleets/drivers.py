@@ -46,6 +46,9 @@ class FleetDriver(models.PrivateAPIHandler):
         alias="driver"
     )
 
+    class Config:
+        allow_population_by_field_name = True
+
     @property
     def id(self) -> Optional[str]:
         "Returns the driver ID if the driver is set"
