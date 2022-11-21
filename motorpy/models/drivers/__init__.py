@@ -177,6 +177,19 @@ class Driver(models.custom.PrivateAPIHandler, models.risk.CommonRisk):
         alias="fleets"
     )
 
+    class Config:
+        allow_population_by_field_name = True
+        # exclude properties from exports
+        exclude = {
+            "api",
+            "tracking_id",
+            "telematics_id",
+            "full_name",
+            "display_name"
+        }
+
+    
+
     @validator('fleets')
     def set_fleets(cls, value: List[Any]) -> List[Any]:
         """Set the fleets for this driver.
@@ -212,11 +225,11 @@ class Driver(models.custom.PrivateAPIHandler, models.risk.CommonRisk):
         return [models.vehicles.DriverVehicle(api=self.api, **v) for v in self.vehicles_raw]
 
     def to_dict(self, api_format: bool = False, **kwargs):
-        return self.dict(exclude={"api"}, by_alias=api_format)
+        return self.dict(exclude={"api"}, by_alias=api_format, **kwargs)
 
     def get_display(self) -> str:
         "A simple display string to identify the model to the user."
-        return self.full_name()
+        return self.full_name
 
     def _check_id(self) -> None:
         """Check that the driver has an ID."""
@@ -565,9 +578,6 @@ class Driver(models.custom.PrivateAPIHandler, models.risk.CommonRisk):
         if not assets:
             return None
         return assets[0].source_id
-
-    class Config:
-        allow_population_by_field_name = True
 
 
 Driver.update_forward_refs()

@@ -31,33 +31,35 @@ class TestBaseDrivers:
         driver = await client.get_driver(drivers[0].id)
         assert driver.id == drivers[0].id
     
-    # async def test_create_driver(self, client: motorpy.Motor):
-    #     new_driver = motorpy.Driver(
-    #         first_name="John",
-    #         last_name="Doe",
-    #         email=secrets.token_hex(10) + "@example.com"
-    #     )
+    async def test_create_driver(self, client: motorpy.Motor):
+        new_driver = motorpy.Driver(
+            first_name="John",
+            last_name="Doe",
+            email=secrets.token_hex(5) + "@example.com"
+        )
+        print(new_driver.first_name)
 
-    #     print(new_driver.__fields_set__)
-    #     print(new_driver.dict(exclude_unset=True, by_alias=True))
+        # export to pydantic dict
+        driver_dict = new_driver.dict(exclude_unset=True)
+        print(driver_dict)
 
-    #     driver = await client.create_driver(
-    #         driver=new_driver,
-    #         password=secrets.token_hex(16),
-    #         send_invite=False,
-    #         send_webhook=False
-    #     )
+        driver = await client.create_driver(
+            driver=new_driver,
+            password=secrets.token_hex(16),
+            send_invite=False,
+            send_webhook=False
+        )
 
-    #     driver_id = driver.id
-    #     assert driver.id is not None
-    #     assert driver.first_name == "John"
-    #     assert driver.last_name == "Doe"
-    #     assert driver.email == new_driver.email
+        driver_id = driver.id
+        assert driver.id is not None
+        assert driver.first_name == "John"
+        assert driver.last_name == "Doe"
+        assert driver.email == new_driver.email
 
-    #     # delete driver
-    #     await driver.delete()
+        # delete driver
+        await driver.delete()
 
-    #     # check driver is deleted
-    #     with pytest.raises(motorpy.APIError):
-    #         await client.get_driver(driver_id)
+        # check driver is deleted
+        with pytest.raises(motorpy.APIError):
+            await client.get_driver(driver_id)
         

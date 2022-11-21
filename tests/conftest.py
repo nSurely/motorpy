@@ -48,6 +48,8 @@ def client(org_id, url, api_key):
         raise Exception("Missing required test parameters")
 
     _auth = motorpy.Auth(api_key=_api_key)
+    # loop = asyncio.new_event_loop()
+    # asyncio.set_event_loop(loop)
     client = motorpy.Motor(org_id=_org_id, url=_url, auth=_auth)
     print(f"Client Created: Motor(org_id={org_id}, url={url}, api_key={len(api_key) * '*'})")
     try:
