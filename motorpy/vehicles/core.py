@@ -103,7 +103,7 @@ class Vehicles:
         # Create the registered vehicle
         raw = await self.api.request("POST",
                                      "registered-vehicles",
-                                     json={
+                                     data={
                                          **vehicle.dict(exclude_unset=True),
                                          "vehicleId": vehicle.vehicle_type.id,
                                      },
@@ -183,9 +183,21 @@ class Vehicles:
         """
         raw = await self.api.request("POST",
                                      "vehicles",
-                                     json=vehicle_type.dict(exclude_unset=True),
+                                     data=vehicle_type.dict(exclude_unset=True),
                                      params={
                                          "webhook": "t" if send_webhook else "f"
                                      })
 
+        return models.VehicleType(**raw, api=self.api)
+    
+    async def get_vehicle_type(self, vehicle_type_id: str) -> models.VehicleType:
+        """Get a vehicle type.
+
+        Args:
+            vehicle_type_id (str): the vehicle type ID.
+
+        Returns:
+            models.VehicleType: the vehicle type.
+        """
+        raw = await self.api.request("GET", f"vehicles/{vehicle_type_id}")
         return models.VehicleType(**raw, api=self.api)

@@ -4,16 +4,13 @@ import pytest
 from datetime import date
 
 
-def test_base_name():
-    assert motorpy.base.NAME == "motorpy"
-
 class TestBaseDrivers:
     "Testing driver methods on base client"
 
     async def test_list_drivers(self, client: motorpy.Motor):
         drivers = [d async for d in client.list_drivers(max_records=1)]
         assert len(drivers) == 1
-    
+
     async def test_driver_search(self, client: motorpy.Motor):
         drivers = [d async for d in client.list_drivers(
             first_name=motorpy.Search("joe", "ilike"),
@@ -30,7 +27,7 @@ class TestBaseDrivers:
 
         driver = await client.get_driver(drivers[0].id)
         assert driver.id == drivers[0].id
-    
+
     async def test_create_driver(self, client: motorpy.Motor):
         new_driver = motorpy.Driver(
             first_name="John",
@@ -63,4 +60,3 @@ class TestBaseDrivers:
         with pytest.raises(motorpy.APIError) as excinfo:
             await client.get_driver(driver_id)
         assert excinfo.value.status_code == 404
-        
