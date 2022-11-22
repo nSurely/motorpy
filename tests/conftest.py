@@ -51,8 +51,23 @@ def client(org_id, url, api_key):
     # loop = asyncio.new_event_loop()
     # asyncio.set_event_loop(loop)
     client = motorpy.Motor(org_id=_org_id, url=_url, auth=_auth)
-    print(f"Client Created: Motor(org_id={org_id}, url={url}, api_key={len(api_key) * '*'})")
+    print(
+        f"Client Created: Motor(org_id={org_id}, url={url}, api_key={len(api_key) * '*'})")
     try:
         yield client
     finally:
         asyncio.run(client.close())
+
+
+@pytest.fixture(autouse=True)
+async def driver(client) -> motorpy.Driver:
+    # fetch from list api
+    # this driver "Joe Adams" exists in the test org
+    drivers = [d async for d in client.list_drivers(
+        first_name=motorpy.Search("joe", "ilike"),
+        last_name=motorpy.Search("adams", "ilike"),
+        max_records=1
+    )]
+    if len(drivers) == 0:
+        raise Exception("No drivers found in org")
+    return drivers[0]

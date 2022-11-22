@@ -1,5 +1,6 @@
 import motorpy
 import pytest
+import asyncio
 
 
 class TestBaseFleets:
@@ -38,6 +39,8 @@ class TestBaseFleets:
     
         # delete fleet
         await fleet.delete()
+
+        await asyncio.sleep(2)
     
         # check fleet is deleted
         with pytest.raises(motorpy.APIError) as excinfo:

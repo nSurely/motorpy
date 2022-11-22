@@ -1,4 +1,5 @@
 import motorpy.models as models
+import asyncio
 from pydantic import Field, validator, parse_raw_as, parse_obj_as
 from datetime import datetime, date
 from typing import Optional, List, Generator, Any
@@ -222,6 +223,8 @@ class Driver(models.custom.PrivateAPIHandler, models.risk.CommonRisk):
         """
         self.vehicles_raw = await self.api.request("GET",
                                                    f"drivers/{self.id}/vehicles")
+        if self.vehicles_raw is None:
+            return []
         return [models.vehicles.DriverVehicle(api=self.api, **v) for v in self.vehicles_raw]
 
     def to_dict(self, api_format: bool = False, **kwargs):
@@ -290,10 +293,11 @@ class Driver(models.custom.PrivateAPIHandler, models.risk.CommonRisk):
         self._check_id()
         if not id:
             raise ValueError("Billing account id is required")
-        return models.billing.BillingAccount(api=self.api, **(await self.api.request(
+        _r = await self.api.request(
             "GET",
             f"/drivers/{self.id}/billing-accounts/{id}"
-        )))
+        )
+        return models.billing.BillingAccount(api=self.api, **_r)
 
     async def get_primary_billing_account(self) -> Optional[models.billing.BillingAccount]:
         """Find the primary billing account for this driver.
@@ -316,11 +320,15 @@ class Driver(models.custom.PrivateAPIHandler, models.risk.CommonRisk):
             BillingAccount: the created account
         """
         self._check_id()
-        return models.billing.BillingAccount(api=self.api, **(await self.api.request(
+        _r = await self.api.request(
             "POST",
             f"/drivers/{self.id}/billing-accounts",
-            json=account.to_dict(exclude_unset=True)
-        )))
+            data=account.dict(exclude_unset=True)
+        )
+        # wait for the account to be created before returning
+        await asyncio.sleep(2)
+        # fetch the full account details
+        return await self.get_billing_account(_r["id"])
 
     async def charge(self, amount: int = None, event: BillingEvent = None) -> BillingEvent:
         """Charge the driver. The billing event will be entered under their current primary billing account.
@@ -349,7 +357,7 @@ class Driver(models.custom.PrivateAPIHandler, models.risk.CommonRisk):
         return models.billing.BillingEvent(api=self.api, **(await self.api.request(
             "POST",
             f"/drivers/{self.id}/billing-events",
-            json=event.dict(exclude_unset=True)
+            data=event.dict(exclude_unset=True)
         )))
 
     async def list_charges(self, event_type: BillingEventType = None, event_status: BillingEventStatus = None, max_records: int = None) -> Generator[BillingEvent, None, None]:

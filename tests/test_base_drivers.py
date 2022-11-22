@@ -1,6 +1,7 @@
 import motorpy
 import secrets
 import pytest
+import asyncio
 from datetime import date
 
 
@@ -55,6 +56,8 @@ class TestBaseDrivers:
 
         # delete driver
         await driver.delete()
+
+        await asyncio.sleep(2)
 
         # check driver is deleted
         with pytest.raises(motorpy.APIError) as excinfo:

@@ -88,7 +88,7 @@ class BillingAccount(models.PrivateAPIHandler):
         alias="updatedAt",
     )
     is_active: bool = Field(
-        default=False,
+        default=True,
         alias="isActive",
     )
     is_primary: bool = Field(
@@ -158,3 +158,7 @@ class BillingAccount(models.PrivateAPIHandler):
         if not self.card:
             return "Unknown"
         return f"{'Primary ' if self.is_primary else ''}{self.card.card_name} - {self.card.card_last_four}"
+    
+    async def delete(self, driver_id: str) -> None:
+        "Delete the billing account."
+        return await self.api.request("DELETE", f"/drivers/{driver_id}/billing-accounts/{self.id}")
