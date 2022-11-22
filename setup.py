@@ -43,4 +43,5 @@ setup(
         "console_scripts": ["motorpy = motorpy.__main__:main"]
     },
     extras_require={"test": read_requirements("requirements-test.txt")},
+    python_requires=">=3.7"
 )
