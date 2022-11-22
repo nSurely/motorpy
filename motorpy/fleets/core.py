@@ -55,7 +55,7 @@ class Fleets:
         Returns:
             models.Fleet: the created fleet model.
         """
-        raw = await self.api.request("POST", "fleets", json=fleet.dict(exclude_unset=True))
+        raw = await self.api.request("POST", "fleets", data=fleet.dict(exclude_unset=True))
 
         model: models.Fleet = models.Fleet(**raw)
 
