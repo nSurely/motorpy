@@ -19,6 +19,9 @@ If true, then the policy will be automatically issued based on risk inheritance 
 """
     )
 
+    class Config:
+        allow_population_by_field_name = True
+
 
 class PolicyGeneration(PolicyGenerationBase):
     pass

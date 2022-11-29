@@ -23,6 +23,9 @@ class PolicyConfigStandardBase(BaseModel, Mutable):
         description="""Currency of the policy."""
     )
 
+    class Config:
+        allow_population_by_field_name = True
+
 
 class PolicyConfigStandard(PolicyConfigStandardBase):
     pass

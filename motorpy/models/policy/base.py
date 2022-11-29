@@ -2,11 +2,12 @@ from pydantic import BaseModel, Field, conint, conset
 from datetime import datetime
 from .enums.cover import PolicyCoverType
 from .enums.group import PolicyGroup
+import motorpy.models as models
 
 
-class PolicyBase(BaseModel):
+class PolicyBase(models.custom.PrivateAPIHandler, BaseModel):
     "The base policy model. All other models should be nested in a seprate model that inherits this one."
-    uid: str = Field(
+    id: str = Field(
         default=None,
         alias="id",
         description="The unique identifier for this policy"

@@ -21,6 +21,9 @@ class GeofencePolygon(BaseModel):
         description="An array of coordinates that defines the perimeter of the polygon. The first and last coordinates in the array must be the same.",
     )
 
+    class Config:
+        allow_population_by_field_name = True
+
     @validator("coordinates")
     def validate_coordinates(cls, v: Optional[List[List[Tuple[float, float]]]]):
         if v is None:
@@ -50,13 +53,22 @@ If the policy is active in geofence.
         description="""List of polygons for this policy to be valid within."""
     )
 
+    class Config:
+        allow_population_by_field_name = True
+
 
 class PolicyGeofenceCreate(PolicyGeofenceBase):
     pass
 
+    class Config:
+        allow_population_by_field_name = True
+
 
 class PolicyGeofenceUpdate(PolicyGeofenceBase):
     pass
+
+    class Config:
+        allow_population_by_field_name = True
 
 
 class PolicyGeofenceRead(PolicyGeofenceBase):

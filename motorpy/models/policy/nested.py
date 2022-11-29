@@ -197,7 +197,7 @@ class Policy(PolicyBase):
         await self.api.request("PATCH", f"policies/{self.id}", body=body)
         if refresh:
             await self.refresh()
-    
+
     async def internal_approve(self, refresh=True, approved_by_id: str = None) -> None:
         """
         Approve the the policy internally.
@@ -218,7 +218,7 @@ class Policy(PolicyBase):
         await self.api.request("PATCH", f"policies/{self.id}", body=body)
         if refresh:
             await self.refresh()
-    
+
     async def cancel(self, refresh=True, message: str = None) -> None:
         """
         Cancel the policy.
@@ -374,6 +374,14 @@ class Policy(PolicyBase):
                     "record_id (fleet id) must not be the same as vehicle_id for FRV policies")
 
             params["vehicleId"] = vehicle_id
+
+        import pprint
+        pp = pprint.PrettyPrinter(indent=4)
+
+        pp.pprint(self.dict(
+            by_alias=True,
+            exclude_unset=True
+        ))
 
         res = await api_handler.request("POST",
                                         f"policy/{record_id}",

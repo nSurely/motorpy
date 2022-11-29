@@ -31,6 +31,9 @@ class PolicyTermsBase(BaseModel, Mutable):
         description="""Terms requires driver e-signature."""
     )
 
+    class Config:
+        allow_population_by_field_name = True
+
 
 class PolicyTerms(PolicyTermsBase):
     pass
