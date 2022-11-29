@@ -124,8 +124,10 @@ class APIHandlerNoAuth:
         if self.org_data is None and not self._org_data_refreshing:
             self.refresh_org_data()
 
+        _url = f"{self.org_url}/{endpoint}" if url_override is None else url_override
+
         body, status = await self._loop_request(
-            method, f"{self.org_url}/{endpoint}" if url_override is None else url_override,
+            method, _url,
             params=param_str(params),
             data=data,
             headers=headers)
@@ -133,9 +135,9 @@ class APIHandlerNoAuth:
         if status < 300:
             return body
         elif status == 401:
-            raise APIAuthError("Not authenticated")
+            raise APIAuthError("Not authenticated", url=_url)
         else:
-            raise APIError(f"API responded with {status}")
+            raise APIError(f"API responded with {status}", status_code=status, url=_url)
 
     async def refresh_org_data(self) -> None:
         """Refresh the org data."""
@@ -247,8 +249,10 @@ class APIHandler(APIHandlerNoAuth):
 
         await self.check_auth()
 
+        _url = f"{self.org_url}/{endpoint}" if url_override is None else url_override
+
         body, status = await self._make_request(
-            method, f"{self.org_url}/{endpoint}" if url_override is None else url_override,
+            method, _url,
             params=param_str(params), data=data, headers=headers)
 
         if status == 401:
@@ -256,7 +260,7 @@ class APIHandler(APIHandlerNoAuth):
             headers.update(self.auth.get_headers())
             body, status = await self._make_request(
                 method,
-                f"{self.org_url}/{endpoint}" if url_override is None else url_override,
+                _url,
                 params=param_str(params),
                 data=data,
                 headers=headers)
@@ -264,7 +268,7 @@ class APIHandler(APIHandlerNoAuth):
         if status < 300:
             return body
         else:
-            raise APIError(str(body), status)
+            raise APIError(str(body), status, _url)
 
     async def download_file(self, url: str, file_location: str, save_dir: str = None) -> str:
         """Downloads a file to local disk.
@@ -289,11 +293,17 @@ class APIHandler(APIHandlerNoAuth):
         if not self._session_set():
             await self._set_session()
 
-        async with self.session.get(os.path.join(url, file_location), headers=self.auth.get_headers(), stream=True) as r:
-            r.raise_for_status()
-            with open(save_loc, 'wb') as f:
-                for chunk in r.iter_content(chunk_size=8192):
-                    f.write(chunk)
+        try:
+            async with self.session.get(os.path.join(url, file_location), headers=self.auth.get_headers(), stream=True) as r:
+                r.raise_for_status()
+                with open(save_loc, 'wb') as f:
+                    for chunk in r.iter_content(chunk_size=8192):
+                        f.write(chunk)
+        except aiohttp.ClientResponseError as e:
+            # intercept
+            # aiohttp raises a ClientResponseError if the status code is not 2xx
+            raise APIError(str(e), e.status, url)
+        
         return save_loc
 
     async def telematics_request(self,
@@ -317,8 +327,9 @@ class APIHandler(APIHandlerNoAuth):
         Returns:
             Optional[dict]: response body if supplied.
         """
+        _url = f"{self.telematics_url}/{endpoint}"
         body, status = await self._loop_request(
-            method, f"{self.telematics_url}/{endpoint}",
+            method, _url,
             params=param_str(params),
             data=data,
             headers=headers)
@@ -326,7 +337,7 @@ class APIHandler(APIHandlerNoAuth):
         if status < 300:
             return body
         else:
-            raise APIError(f"Telematics API Error", status)
+            raise APIError(f"Telematics API Error", status_code=status, url=_url)
 
     async def batch_fetch(self,
                           endpoint: str,
