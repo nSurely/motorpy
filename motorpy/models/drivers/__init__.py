@@ -2,7 +2,7 @@ import motorpy.models as models
 import asyncio
 from pydantic import Field, validator, parse_raw_as, parse_obj_as
 from datetime import datetime, date
-from typing import Optional, List, Generator, Any
+from typing import Optional, List, Generator, Any, AsyncGenerator
 
 from motorpy.models.billing.events import BillingEvent, BillingEventStatus, BillingEventType
 
@@ -189,8 +189,6 @@ class Driver(models.custom.PrivateAPIHandler, models.risk.CommonRisk):
             "display_name"
         }
 
-    
-
     @validator('fleets')
     def set_fleets(cls, value: List[Any]) -> List[Any]:
         """Set the fleets for this driver.
@@ -227,7 +225,7 @@ class Driver(models.custom.PrivateAPIHandler, models.risk.CommonRisk):
             return []
         return [models.vehicles.DriverVehicle(api=self.api, **v) for v in self.vehicles_raw]
 
-    def to_dict(self, api_format: bool = False, **kwargs):
+    def to_dict(self, api_format: bool = False, **kwargs) -> dict:
         return self.dict(exclude={"api"}, by_alias=api_format, **kwargs)
 
     def get_display(self) -> str:
@@ -349,7 +347,7 @@ class Driver(models.custom.PrivateAPIHandler, models.risk.CommonRisk):
         if not event:
             event = BillingEvent(
                 amount=amount,
-                description="Charge",
+                message="Charge",
                 type="other",
             )
 
@@ -360,7 +358,10 @@ class Driver(models.custom.PrivateAPIHandler, models.risk.CommonRisk):
             data=event.dict(exclude_unset=True)
         )))
 
-    async def list_charges(self, event_type: BillingEventType = None, event_status: BillingEventStatus = None, max_records: int = None) -> Generator[BillingEvent, None, None]:
+    async def list_charges(self,
+                           event_type: BillingEventType = None,
+                           event_status: BillingEventStatus = None,
+                           max_records: int = None) -> AsyncGenerator[BillingEvent, None]:
         """List all charges for this driver.
 
         Args:
@@ -369,7 +370,7 @@ class Driver(models.custom.PrivateAPIHandler, models.risk.CommonRisk):
             max_records (int, optional): maximum number of records to return. Defaults to None.
 
         Yields:
-            Generator[BillingEvent, None, None]: billing events
+            AsyncGenerator[BillingEvent, None, None]: billing events
         """
         self._check_id()
 
@@ -384,8 +385,56 @@ class Driver(models.custom.PrivateAPIHandler, models.risk.CommonRisk):
             if max_records:
                 if count >= max_records:
                     break
-            yield models.policy.BillingEvent(api=self.api, **p)
+            yield models.billing.BillingEvent(api=self.api, **p)
             count += 1
+
+    async def get_charge(self, id: str) -> BillingEvent:
+        """Get a charge for this driver.
+
+        Args:
+            id (str): the id of the charge
+
+        Returns:
+            BillingEvent: the charge
+        """
+        self._check_id()
+        if not id:
+            raise ValueError("Charge id is required")
+        return models.billing.BillingEvent(api=self.api, **(await self.api.request(
+            "GET",
+            f"/drivers/{self.id}/billing-events/{id}"
+        )))
+
+    async def list_billing_events(self,
+                                  event_type: BillingEventType = None,
+                                  event_status: BillingEventStatus = None,
+                                  max_records: int = None) -> AsyncGenerator[BillingEvent, None]:
+        """List all billing events (charges) for this driver.
+        This is an alias for list_charges.
+
+        Args:
+            event_type (BillingEventType, optional): filter by type. Defaults to None.
+            event_status (BillingEventStatus, optional): filter by status. Defaults to None.
+            max_records (int, optional): maximum number of records to return. Defaults to None.
+
+        Yields:
+            AsyncGenerator[BillingEvent, None, None]: billing events
+        """
+        async for b in self.list_charges(event_type=event_type, event_status=event_status, max_records=max_records):
+            yield b
+    
+
+    async def get_billing_event(self, id: str) -> BillingEvent:
+        """Get a billing event (charge) for this driver.
+        This is the same as get_charge.	
+
+        Args:
+            id (str): the id of the billing event
+
+        Returns:
+            BillingEvent: the billing event
+        """
+        return await self.get_charge(id)
 
     # fleets
 
@@ -448,6 +497,20 @@ class Driver(models.custom.PrivateAPIHandler, models.risk.CommonRisk):
             api_handler=self.api,
             record_id=self.id,
         )
+    
+    async def get_policy(self, policy_id: str) -> 'models.policy.Policy':
+        """Get a policy for this driver.
+
+        Args:
+            policy_id (str): the id of the policy
+
+        Returns:
+            Policy: the policy
+        """
+        return models.policy.Policy(api=self.api, **(await self.api.request(
+            "GET",
+            f"policy/{policy_id}"
+        )))
 
     def _check_id(self) -> None:
         if not self.id:
