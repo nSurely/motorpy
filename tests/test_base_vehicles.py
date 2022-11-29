@@ -1,8 +1,7 @@
 import motorpy
 import pytest
-import secrets
+import asyncio
 import random
-from datetime import date
 
 
 class TestBaseVehicles:
@@ -67,6 +66,8 @@ class TestBaseVehicles:
         # delete vehicle type
         await vehicle_type.delete()
 
+        await asyncio.sleep(2)
+
         # check vehicle type is deleted
         with pytest.raises(motorpy.APIError) as excinfo:
             await client.get_vehicle_type(vehicle_type_id)
@@ -105,6 +106,9 @@ class TestBaseVehicles:
         # delete vehicle
         await vehicle.delete()
         await vehicle_type.delete()
+        
+        # wait for delete to complete
+        await asyncio.sleep(2)
 
         # check vehicle is deleted
         with pytest.raises(motorpy.APIError) as excinfo:
