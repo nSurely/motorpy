@@ -125,6 +125,8 @@ class BillingEvent(PrivateAPIHandler):
         self.update(data)
         # if API call was successful, update the object
         self.status = status
+    
+    
 
 
 # update forwards refs
