@@ -42,7 +42,7 @@ class BillingEvent(PrivateAPIHandler):
         default=None,
         alias="paymentId",
     )
-    amount: int = Field(
+    amount: Optional[int] = Field(
         default=0,
         alias="amount",
     )
@@ -100,15 +100,15 @@ class BillingEvent(PrivateAPIHandler):
         "Check if the billing event has been approved."
         return self.approval_at is not None
 
-    def update(self, data: dict) -> None:
+    async def update(self, data: dict) -> None:
         "Update the billing event."
-        self._api.request(
+        await self.api.request(
             'PATCH',
-            f'/billing-events/{self.id}',
+            f'billing-events/{self.id}',
             data=data
         )
 
-    def update_status(self, status: str, payment_id: str = None) -> None:
+    async def update_status(self, status: str, payment_id: str = None) -> None:
         "Update the status of the billing event. Optionally add a payment ID."
         if status not in STATUS:
             raise ValueError(
@@ -122,10 +122,16 @@ class BillingEvent(PrivateAPIHandler):
             data["paymentId"] = payment_id
 
         # update via API
-        self.update(data)
+        await self.update(data)
         # if API call was successful, update the object
         self.status = status
     
+    # async def delete(self) -> None:
+    #     "Delete the billing event."
+    #     await self.api.request(
+    #         'DELETE',
+    #         f'billing-events/{self.id}',
+    #     )
     
 
 
