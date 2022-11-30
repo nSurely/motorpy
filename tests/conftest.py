@@ -70,4 +70,19 @@ async def driver(client) -> motorpy.Driver:
     )]
     if len(drivers) == 0:
         raise Exception("No drivers found in org")
-    return drivers[0]
+
+    # driver = await client.get_driver(
+    #     drivers[0].id,
+    #     risk=True,
+    #     address=True,
+    #     fleets=True,
+    #     vehicle_count=True,
+    #     distance=False,
+    #     points=True,
+    #     files=True,
+    #     contact=True,
+    #     occupation=True
+    # )
+    driver = drivers[0]
+    await driver.refresh()
+    return driver

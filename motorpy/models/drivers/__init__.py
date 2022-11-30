@@ -422,7 +422,6 @@ class Driver(models.custom.PrivateAPIHandler, models.risk.CommonRisk):
         """
         async for b in self.list_charges(event_type=event_type, event_status=event_status, max_records=max_records):
             yield b
-    
 
     async def get_billing_event(self, id: str) -> BillingEvent:
         """Get a billing event (charge) for this driver.
@@ -497,7 +496,7 @@ class Driver(models.custom.PrivateAPIHandler, models.risk.CommonRisk):
             api_handler=self.api,
             record_id=self.id,
         )
-    
+
     async def get_policy(self, policy_id: str) -> 'models.policy.Policy':
         """Get a policy for this driver.
 
@@ -516,25 +515,55 @@ class Driver(models.custom.PrivateAPIHandler, models.risk.CommonRisk):
         if not self.id:
             raise ValueError("id must be set.")
 
-    async def refresh(self) -> None:
+    async def refresh(self,
+                      risk: bool = True,
+                      address: bool = True,
+                      fleets: bool = True,
+                      vehicle_count: bool = False,
+                      distance: bool = False,
+                      points: bool = True,
+                      files: bool = True,
+                      contact: bool = True,
+                      occupation: bool = True,
+                      **query) -> None:
         """
         Refresh the model from the API.
+
+        Args:
+            risk (bool, optional): whether to include risk data. Defaults to True.
+            address (bool, optional): whether to include address data. Defaults to True.
+            fleets (bool, optional): whether to include fleet data. Defaults to True.
+            vehicle_count (bool, optional): whether to include vehicle count data. Defaults to False.
+            distance (bool, optional): whether to include distance data. Defaults to False.
+            points (bool, optional): whether to include points data. Defaults to True.
+            files (bool, optional): whether to include files data. Defaults to True.
+            contact (bool, optional): whether to include contact data. Defaults to True.
+            occupation (bool, optional): whether to include occupation data. Defaults to True.
+            **query (dict): additional query parameters.
         """
         self._check_id()
         api = self.api
+
+        params = {
+            **query,
+            'risk': risk,
+            'address': address,
+            'fleets': fleets,
+            'vehicleCount': vehicle_count,
+            'distance': distance,
+            'points': points,
+            'files': files,
+            'contact': contact,
+            'occupation': occupation
+        }
+        _r = await self.api.request(
+            "GET",
+            f"drivers/{self.id}",
+            params=params
+        )
+        print(_r['risk'])
         self.__init__(
-            **(await self.api.request("GET",
-                                      f"/drivers/{self.id}",
-                                      params={
-                                          "risk": True,
-                                          "address": True,
-                                          "fleets": True,
-                                          "files": True,
-                                          "contact": True,
-                                          "occupation": True,
-                                          "points": True,
-                                          "policies": True
-                                      })),
+            **_r,
             api=api
         )
 

@@ -1,41 +1,88 @@
 from pydantic import BaseModel, Field
+from typing import Optional
+from ..custom import Exporter
 
 
 class RiskApplication(BaseModel):
     """
     Risk application model
     """
-    inheritance: bool = Field(default=False)
-    apply: bool = Field(default=False)
+    inheritance: bool = Field(
+        default=False,
+        alias="inheritance"
+    )
+    apply: bool = Field(
+        default=False,
+        alias="apply"
+    )
+
+    class Config:
+        allow_population_by_field_name = True
 
 
 class RiskRetro(BaseModel):
     """
     Risk model
     """
-    rates: RiskApplication = Field(default=RiskApplication())
-    value: float = Field(default=0.0)
-    weighting: float = Field(default=0.0)
-    premium: RiskApplication = Field(default=RiskApplication())
+    rates: Optional[RiskApplication] = Field(
+        alias="rates"
+    )
+    value: float = Field(
+        default=0.0,
+        alias="value"
+    )
+    weighting: float = Field(
+        default=0.0,
+        alias="weighting"
+    )
+    premium: Optional[RiskApplication] = Field(
+        alias="premium"
+    )
+
+    class Config:
+        allow_population_by_field_name = True
 
 
 class DynamicRisk(BaseModel):
     """
     Dynamic risk model
     """
-    apply: bool = Field(default=False)
-    process: str = Field(default="std")
-    weighting: float = Field(default=0.0)
+    apply: bool = Field(
+        alias="apply"
+    )
+    process: str = Field(
+        alias="process"
+    )
+    weighting: float = Field(
+        alias="weighting"
+    )
+
+    class Config:
+        allow_population_by_field_name = True
 
 
 class Risk(BaseModel):
     """
     Risk model
     """
-    lookback: RiskRetro = Field(default=RiskRetro())
-    dynamic: DynamicRisk = Field(default=DynamicRisk())
-    ihr: RiskRetro = Field(default=RiskRetro())
+    lookback: Optional[RiskRetro] = Field(
+        alias="lookback"
+    )
+    dynamic: Optional[DynamicRisk] = Field(
+        alias="dynamic"
+    )
+    ihr: Optional[RiskRetro] = Field(
+        alias="ihr"
+    )
+
+    class Config:
+        allow_population_by_field_name = True
 
 
-class CommonRisk(BaseModel):
-    risk: Risk = Field(default=None, alias="risk")
+class CommonRisk(Exporter):
+    risk: Optional[Risk] = Field(
+        alias="risk"
+    )
+
+    class Config:
+        allow_population_by_field_name = True

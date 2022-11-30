@@ -2,22 +2,8 @@ from pydantic import BaseModel, Field
 from typing import Any, Optional, Set
 
 
-class PrivateAPIHandler(BaseModel):
-    """
-    This api handler is for private use only.
-    It allows multiple models to reference the same API with the same credentials.
-    """
-    # private
-    # ! workaround: this is Any type because pydantic Field doesn't support assignment in other models
-    # this will always be None or api.APIHandler
-    api: Any = Field(
-        default=None,
-        include=False,
-        hidden=True
-    )
-
-    class Config:
-        allow_populatiion_by_field_name = True
+class Exporter(BaseModel):
+    "Class for exporting models"
 
     def dict(self,
              exclude: Optional[Set[str]] = None,
@@ -37,9 +23,11 @@ class PrivateAPIHandler(BaseModel):
         Returns:
             dict: a dict of the model.
         """
+        _ex_keys = {"api", "api_path"}
+
         if not exclude:
             exclude = set()
-        
+
             # hidden_fields = set(
             #     attribute_name
             #     for attribute_name, model_field in self.__fields__.items()
@@ -63,13 +51,13 @@ class PrivateAPIHandler(BaseModel):
 
             if key not in self.__fields_set__ and exclude_unset:
                 continue
-            
+
             # remove hidden fields here
-            if key == "api":
+            if key in _ex_keys:
                 continue
 
             # set key to alias if it exists
-            key = self.__fields__[key].alias if by_alias else key
+            key = self.__fields__[key].alias if by_alias and self.__fields__[key].alias else key
 
             if isinstance(value, BaseModel):
                 result[key] = value.dict(
@@ -83,6 +71,39 @@ class PrivateAPIHandler(BaseModel):
                 result[key] = value
 
         return result
+
+
+class PrivateAPIHandler(Exporter):
+    """
+    This api handler is for private use only.
+    It allows multiple models to reference the same API with the same credentials.
+    """
+    # private
+    # ! workaround: this is Any type because pydantic Field doesn't support assignment in other models
+    # this will always be None or api.APIHandler
+    api: Any = Field(
+        default=None,
+        include=False,
+        hidden=True
+    )
+
+    api_path: str = Field(
+        None,
+        include=False,
+        hidden=True,
+        alias='apiPath'
+    )
+
+    class Config:
+        allow_populatiion_by_field_name = True
+
+    def get_api_path(self) -> Optional[str]:
+        """Get the API path for the model.
+
+        Returns:
+            Optional[str]: the API path.
+        """
+        return self.api_path
 
     async def _update(self, persist: bool = False, **kwargs) -> None:
         """

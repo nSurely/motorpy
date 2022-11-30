@@ -2,10 +2,14 @@
 import motorpy
 import asyncio
 import pytest
+import pprint
+from .helpers.compare import compare_dict_keys, flatten
 
 
 class TestDrivers:
     "Testing methods on the Driver model"
+
+    pp = pprint.PrettyPrinter(indent=4)
 
     async def test_driver_display(self, driver: motorpy.Driver):
         display = driver.get_display()
@@ -189,7 +193,7 @@ class TestDrivers:
             return
         assert all([isinstance(p, motorpy.Policy) for p in policies])
         assert isinstance(policies, list)
-    
+
     async def test_policy_create(self, driver: motorpy.Driver):
         new_policy_id = None
         try:
@@ -215,3 +219,57 @@ class TestDrivers:
             return
         assert all([isinstance(v, motorpy.DriverVehicle) for v in vehicles])
         assert isinstance(vehicles, list)
+
+    @pytest.mark.skip(reason="not implemented")
+    async def test_api_values(self, client: motorpy.Motor, driver: motorpy.Driver):
+        driver_id = driver.id
+
+        # should match the API json
+        driver_model_dict = driver.dict(
+            exclude_unset=False,
+            by_alias=True,
+            exclude={"api", "vehicles_raw"}
+        )
+
+        # get the driver from the API
+        driver_api = await client.request(
+            "GET",
+            f"/drivers/{driver_id}",
+            params={
+                "policies": "t",
+                "risk": "t",
+                "address": "t",
+                "fleets": "t",
+                "vehicleCount": "t",
+                "distance": "t",
+                "files": "t",
+                "contact": "t",
+                "occupation": "t",
+                "points": "t"
+            }
+        )
+
+        if 'policies' in driver_api:
+            # different implementation of the API
+            del driver_api['policies']
+
+        # self.pp.pprint(driver_model_dict.get("risk"))
+        # self.pp.pprint(driver_model_dict)
+        # self.pp.pprint(driver.risk)
+
+        if not compare_dict_keys(driver_model_dict, driver_api):
+            flat_driver_model_dict = flatten(driver_model_dict)
+            flat_driver_api = flatten(driver_api)
+
+            # self.pp.pprint(flat_driver_model_dict)
+
+            _api_missing_keys = set(flat_driver_model_dict.keys()) - \
+                set(flat_driver_api.keys())
+            _model_missing_keys = set(flat_driver_api.keys()) - \
+                set(flat_driver_model_dict.keys())
+
+            print("\nAPI missing keys:")
+            self.pp.pprint('None' if not _api_missing_keys else _api_missing_keys)
+            print("\nModel missing keys:")
+            self.pp.pprint('None' if not _model_missing_keys else _model_missing_keys)
+            assert False
