@@ -561,7 +561,6 @@ class Driver(models.custom.PrivateAPIHandler, models.risk.CommonRisk):
             f"drivers/{self.id}",
             params=params
         )
-        print(_r['risk'])
         self.__init__(
             **_r,
             api=api

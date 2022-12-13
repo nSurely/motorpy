@@ -128,7 +128,7 @@ class Vehicles:
         return rv
 
     async def list_vehicle_types(self,
-                                 make: Search = None,
+                                 brand: Search = None,
                                  model: Search = None,
                                  year: int = None,
                                  external_id: Search = None,
@@ -137,7 +137,7 @@ class Vehicles:
         """List vehicle types.
 
         Args:
-            make (str): the make.
+            brand (str): the brand.
             model (str): the model.
             year (int): the year.
             external_id (str): the external ID.
@@ -149,8 +149,8 @@ class Vehicles:
         """
         params = {}
 
-        if make:
-            params["make"] = str(make)
+        if brand:
+            params["brand"] = str(brand)
         if model:
             params["model"] = str(model)
         if year:
